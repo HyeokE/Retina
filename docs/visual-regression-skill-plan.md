@@ -448,7 +448,7 @@ Retina가 재사용 workflow와 composite action을 제공해요. 소비 저장�
 - 빌드는 소비 프로젝트 workflow에 둬요. 빌드 명령·서명·secret이 프로젝트마다 다르기 때문이에요. 지정한 artifact가 없으면 해당 플랫폼은 `INCONCLUSIVE`예요.
 - **secret은 호출하는 쪽이 이름을 지정해 명시적으로 넘기는 것이 기본**이에요. reusable workflow는 받을 secret 이름을 미리 선언해야 하는데 프로젝트별 이름을 알 수 없어서, `RETINA_ENV_1`~`RETINA_ENV_8` 같은 슬롯(이름 제안)을 선언하고 호출 쪽이 `secret-names`로 환경 변수 이름과 맞춰요. 슬롯이 불편하면 소비 저장소의 job이 composite action을 호출하면서 `env:`로 넘기는 방식을 써요(23장). Retina는 `requiredEnv`로 선언된 **이름**의 존재만 확인해요. Figma API 토큰도 같은 방식이에요. 값은 로그·리포트·artifact에 남기지 않아요.
 - `secrets: inherit`는 GitHub 문서에서 호출자와 피호출 workflow가 같은 조직·엔터프라이즈에 있을 때만 설명하고, 소유자가 다른 예시는 secret을 이름으로 넘겨요(2026-10-25 확인). 소유자가 같을 때만 쓰고, 그때도 호출 대상을 커밋 SHA로 고정해요.
-- **저장소 접근**: private 저장소의 reusable workflow는 그 저장소의 Actions 접근 정책이 호출하는 저장소를 허용해야 호출할 수 있어요. 실제로는 같은 소유자(개인 또는 조직) 아래의 저장소로 한정될 가능성이 커요(미검증). Retina 저장소와 소비 저장소의 소유자가 다르고 Retina가 private이면 workflow 호출이 안 될 수 있고, Retina 패키지를 설치하는 데도 토큰이 필요해요. 해결안(Retina 공개, 조직으로 이전·미러, 소비 저장소가 workflow를 vendoring·pin)은 23장의 결정이고, Retina 저장소의 공개 여부는 확인하지 않았어요.
+- **저장소 접근**: private 저장소의 reusable workflow는 그 저장소의 Actions 접근 정책이 호출하는 저장소를 허용해야 호출할 수 있어요. 실제로는 같은 소유자(개인 또는 조직) 아래의 저장소로 한정될 가능성이 커요(미검증). Retina 저장소와 소비 저장소의 소유자가 다르고 Retina가 private이면 workflow 호출이 안 될 수 있고, Retina 패키지를 설치하는 데도 토큰이 필요해요. Retina 저장소는 공개(public)예요(2026-10-25 확인). 그래서 소비 저장소의 조직이 공개 reusable workflow 사용을 허용하면 호출할 수 있고, 패키지 설치에도 토큰이 필요 없어요. 조직 정책이 막는 경우의 대안(조직으로 이전·미러, workflow vendoring·pin)은 23장에 남겨요.
 - 소비 저장소는 reusable workflow를 태그가 아닌 **커밋 SHA 또는 정확한 버전**으로 고정해요.
 - **fixture 격리**는 플랫폼별·run별 계정이 기본이에요. workflow 안의 `concurrency` 그룹은 보조 수단이고, 쓴다면 필수 run이 대기 중 취소로 밀려나지 않게 플랫폼 계정 단위로 범위를 좁혀요(GitHub 동작은 문서로 재확인 필요, 16.4).
 
@@ -1018,7 +1018,7 @@ jobs:
 
 - **필수 check는 `retina-validate` 하나만** 지정해요. `retina-dev`는 정보용이라 임계값이 없는 동안 `3`으로 끝나 실패로 표시되지만 PR을 막지 않아요(9.4, 11.1).
 - `pull_request`의 기본 이벤트 종류는 `opened`, `synchronize`, `reopened`예요. `retina-native` 라벨을 붙였을 때 run이 시작되려면 `labeled`를 넣어야 해요.
-- **소유자가 다른 저장소 사이의 호출**: Retina 저장소는 개인 계정 소유이고 파일럿 저장소는 조직 소유예요. 그래서 위 YAML은 `secrets: inherit`를 쓰지 않고 secret을 이름으로 넘겨요. reusable workflow 호출이 되려면 Retina 저장소를 공개하거나, 조직으로 옮기거나 미러하거나, 파일럿 저장소가 workflow를 vendoring·pin해야 할 수 있어요. 조직 CI가 개인 private 저장소에서 Retina 패키지를 설치하려면 토큰도 필요해요. 저장소 공개 여부는 확인하지 않았고, 결정은 단계 A예요(23장).
+- **소유자가 다른 저장소 사이의 호출**: Retina 저장소는 개인 계정 소유이고 파일럿 저장소는 조직 소유예요. 그래서 위 YAML은 `secrets: inherit`를 쓰지 않고 secret을 이름으로 넘겨요. reusable workflow 호출이 되려면 Retina 저장소를 공개하거나, 조직으로 옮기거나 미러하거나, 파일럿 저장소가 workflow를 vendoring·pin해야 할 수 있어요. Retina 저장소는 공개(2026-10-25 확인)라서 파일럿 조직이 공개 reusable workflow를 허용하는지만 단계 A에서 확인하면 돼요. secret은 여전히 이름으로 명시 전달해요(23장).
 - 웹은 `next dev`보다 빌드 후 시작을 권장해요(제안, 단계 B에서 비교).
 - 위 YAML에는 `concurrency`를 두지 않았어요. 계정 격리는 플랫폼별·run별 테스트 계정이 맡고(16.4), `concurrency`는 보조 수단이에요. 전역 group 하나를 모든 PR이 공유하면 한 계정에 직렬화되고, 대기 중인 필수 run이 취소될 수 있어요(GitHub 동작은 문서로 재확인 필요).
 - **보안 경계**: 조직 secret을 다른 소유자의 저장소 workflow에 넘기면 그 Retina 코드가 이 secret을 가진 채 실행돼요. 그래서 커밋 SHA 고정과 Retina 업그레이드 리뷰는 재현성뿐 아니라 보안 경계예요.
@@ -1203,7 +1203,7 @@ profile별 p50·p95, cold/warm 실행, 최초 실패율, fixture 유지 시간, 
 | 8b | 게시용 빌드·emit 전략 | 범용 | 정하지 않음. 지금은 `noEmit` 타입 검사만 하고 `exports`가 `src/index.ts`를 가리켜요. 소비자가 Node에서 npm으로 설치해 실행할 수 있는 산출물이 기준이에요 | 단계 B 전 |
 | 9 | 배포 대상 호스트 | 범용 | Claude Code 플러그인 우선, Codex 표시 정보도 유지 | 단계 C 전 |
 | 10 | baseline 저장소 | 범용 | Git, 용량이 커지면 LFS | 단계 D |
-| 11 | 저장소 소유자 불일치 대응과 Retina 배포 경로. Retina 저장소는 개인 계정, 파일럿 저장소는 조직 소유예요. 선택지는 Retina 공개, 조직으로 이전·미러, 파일럿 저장소의 workflow vendoring·pin이에요. Retina를 private으로 두면 조직 CI의 패키지 설치에 토큰도 필요해요. 설치 경로(사설 레지스트리 대 git 의존성)도 같이 정해요 | 범용 입력, 파일럿 값 | 아직 권장값이 없어요. Retina 저장소의 공개 여부를 먼저 확인하고(미확인), 공개가 어렵다면 조직으로 이전·미러를 우선 검토해요. 어떤 경우든 workflow는 커밋 SHA나 정확한 버전으로 고정해요 | 단계 A |
+| 11 | 저장소 소유자 불일치 대응과 Retina 배포 경로. Retina 저장소는 개인 계정, 파일럿 저장소는 조직 소유예요. 선택지는 Retina 공개, 조직으로 이전·미러, 파일럿 저장소의 workflow vendoring·pin이에요. Retina를 private으로 두면 조직 CI의 패키지 설치에 토큰도 필요해요. 설치 경로(사설 레지스트리 대 git 의존성)도 같이 정해요 | 범용 입력, 파일럿 값 | Retina 저장소는 공개예요(2026-10-25 확인). 공개 reusable workflow를 직접 호출하고, 파일럿 조직 정책이 막으면 조직으로 이전·미러를 검토해요. 어떤 경우든 workflow는 커밋 SHA나 정확한 버전으로 고정해요 | 단계 A |
 | 12 | secret 전달 방식: 명시 전달(슬롯 `RETINA_ENV_n`) 대 소비 저장소 job의 composite action `env:` 전달 | 범용 | 명시 전달이 기본이에요. `secrets: inherit`는 같은 조직·엔터프라이즈일 때만 쓰고, 소유자가 다르면 쓰지 않아요 | 단계 B |
 | 13 | 독립 요구 5개의 확정과 근거 | 파일럿 | 사용자·PM 확인 전에는 초안 | 단계 A |
 | 14 | baseline 검토자(CODEOWNERS 대상) | 파일럿 | 시각 변경을 책임지는 팀 1곳 | 단계 C 전 |
