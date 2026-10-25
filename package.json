@@ -1,0 +1,33 @@
+{
+  "name": "retina-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.0",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "typecheck": "bun run typecheck:packages && bun run typecheck:examples",
+    "typecheck:packages": "tsc -p tsconfig.json",
+    "typecheck:examples": "bun run --filter 'retina-example-*' typecheck",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "example:api": "bun run --cwd examples/api start",
+    "example:api:test": "bun run --cwd examples/api start:test",
+    "example:web": "bun run --cwd examples/web dev",
+    "example:expo": "bun run --cwd examples/expo start",
+    "example:build:apps": "bun run --filter retina-example-web build && bun run --filter retina-example-expo build",
+    "example:build": "bun run example:build:apps && bun run --filter retina-example-api typecheck",
+    "example:check:prod": "VITE_RETINA_TEST_MODE=0 EXPO_PUBLIC_RETINA_TEST_MODE=0 bun run example:build:apps && node examples/scripts/check-test-markers.mjs --expect=absent examples/web/dist examples/expo/dist",
+    "example:check:test": "VITE_RETINA_TEST_MODE=1 EXPO_PUBLIC_RETINA_TEST_MODE=1 VITE_BUILD_ID=retina-check EXPO_PUBLIC_BUILD_ID=retina-check bun run example:build:apps && node examples/scripts/check-test-markers.mjs --expect=present examples/web/dist examples/expo/dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

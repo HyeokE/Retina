@@ -1,0 +1,31 @@
+{
+  "name": "retina-example-expo",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "export:ios": "expo export --platform ios --output-dir dist/ios",
+    "export:android": "expo export --platform android --output-dir dist/android",
+    "build": "bun run export:ios && bun run export:android",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "doctor": "expo-doctor"
+  },
+  "dependencies": {
+    "expo": "~58.0.19",
+    "expo-linking": "~58.0.14",
+    "expo-status-bar": "~58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-safe-area-context": "~5.10.1",
+    "retina-example-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "retina": "workspace:*",
+    "retina-adapter-native": "workspace:*",
+    "typescript": "~6.0.3"
+  }
+}

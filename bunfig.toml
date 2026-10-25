@@ -1,0 +1,10 @@
+[install]
+# Hoisted (flat) node_modules instead of Bun's isolated layout.
+# Why: with the isolated linker, Bun created two peer variants of the native
+# module expo-constants (one for expo, one for expo-linking), and expo-doctor
+# flags duplicate native modules because a native build can link only one.
+# Expo's monorepo guide gives the same fallback for pnpm (nodeLinker: hoisted).
+# Trade-off: packages can resolve undeclared dependencies, so keep manifests
+# honest. React must stay on a single version across workspaces (see
+# examples/web/package.json) so the Expo app never resolves a second copy.
+linker = "hoisted"
