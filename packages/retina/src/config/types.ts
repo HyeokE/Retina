@@ -1,3 +1,4 @@
+import type { CheckKind, Platform } from '../domain/verdict/types.ts';
 import type { RetinaProviders } from './providers.ts';
 
 /*
@@ -73,6 +74,19 @@ export interface ReportConfig {
   readonly open: ReportOpen;
 }
 
+/**
+ * A case the project requires (proposal). `profile` is optional: when set,
+ * the case is expected only in runs that select that profile, so narrowing a
+ * run to one profile of a platform does not report the other profile's cases
+ * as missing (the run is still `partial`).
+ */
+export interface RequiredCaseConfig {
+  readonly caseId: string;
+  readonly platform: Platform;
+  readonly expectedChecks: readonly CheckKind[];
+  readonly profile?: string;
+}
+
 export interface RetinaConfig<DeviceId = string | undefined> {
   /** Keyed by profile id. */
   readonly profiles: Readonly<Record<string, Profile<DeviceId>>>;
@@ -85,6 +99,8 @@ export interface RetinaConfig<DeviceId = string | undefined> {
   readonly baselines: string;
   /** Names only; values are never recorded (plan 6.3). */
   readonly requiredEnv?: readonly string[];
+  /** Required cases with their expected check kinds (proposal). */
+  readonly required?: readonly RequiredCaseConfig[];
 }
 
 /** A config that passed `validateConfig`: every native device is pinned. */
@@ -107,7 +123,9 @@ export type ConfigIssueCode =
   | 'duplicate_env_name'
   | 'invalid_env_name'
   | 'unknown_provider'
-  | 'invalid_provider';
+  | 'invalid_provider'
+  | 'profile_platform_mismatch'
+  | 'duplicate_required_case';
 
 /**
  * One problem in a config. `path` is dotted with `[index]` for arrays (`''` is

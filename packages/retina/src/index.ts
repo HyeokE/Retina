@@ -12,7 +12,7 @@ export type {
   Status,
   VerdictReason,
 } from './domain/verdict/types.ts';
-export { KNOWN_PLATFORMS, VERDICT_REASONS } from './domain/verdict/types.ts';
+export { CHECK_KINDS, KNOWN_PLATFORMS, STATUSES, VERDICT_REASONS } from './domain/verdict/types.ts';
 export { caseStatus, mergeStatus, STATUS_SEVERITY_ORDER, worstStatus } from './domain/verdict/status.ts';
 export type { ResolvedCase } from './domain/verdict/resolve-case.ts';
 export { resolveCase } from './domain/verdict/resolve-case.ts';
@@ -73,6 +73,7 @@ export type {
   Profile,
   ReportConfig,
   ReportOpen,
+  RequiredCaseConfig,
   RetinaConfig,
   ValidatedConfig,
   WebProfile,
@@ -130,3 +131,24 @@ export type {
   SchemaValidator,
 } from './config/providers.ts';
 export { resolveLocator } from './config/providers.ts';
+
+// Scenario helpers: a scenario test declares and records its Retina case in
+// Vitest task meta; `retina run` reads it back through its reporter.
+
+export type { ScenarioContext } from './infrastructure/vitest/record-case.ts';
+export { declareCase, recordCase } from './infrastructure/vitest/record-case.ts';
+export type { CaseIdentity } from './domain/run/case-shape.ts';
+
+// Files written by `retina run` (proposals).
+
+export type {
+  ExclusionReason,
+  PlanExclusions,
+  PlannedProfile,
+  PlannedRequiredCase,
+  RunPlan,
+  RunSelection,
+} from './domain/run/plan.ts';
+export type { RunResultFile } from './domain/run/result-file.ts';
+export type { TestCounts } from './domain/run/map-outcomes.ts';
+export { RUN_REASONS } from './domain/run/map-outcomes.ts';

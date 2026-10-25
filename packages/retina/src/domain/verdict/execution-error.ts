@@ -3,7 +3,8 @@ import type { Platform } from './types.ts';
 /**
  * Codes for problems that stop part or all of a run from being judged. The
  * first six are detected by `aggregateRun` itself; the rest are reported by
- * the run layer (configuration, providers, devices, artifacts).
+ * the run layer (configuration, selection, test runner, providers, devices,
+ * artifacts).
  */
 export type ExecutionErrorCode =
   | 'no_required_cases'
@@ -17,7 +18,16 @@ export type ExecutionErrorCode =
   | 'provider_timeout'
   | 'setup_failure'
   | 'device_unavailable'
-  | 'artifact_error';
+  | 'artifact_error'
+  | 'selection_error'
+  | 'no_test_files'
+  | 'collection_error'
+  | 'test_timeout'
+  | 'unattributed_failure'
+  | 'invalid_case_result'
+  | 'unhandled_error'
+  | 'run_interrupted'
+  | 'runner_error';
 
 /**
  * An execution error is not a status. Any execution error makes the exit code

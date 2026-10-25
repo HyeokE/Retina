@@ -6,6 +6,12 @@ export type Status = 'PASS' | 'FAIL' | 'REVIEW_REQUIRED' | 'INCONCLUSIVE';
 
 export type CheckKind = 'functional' | 'layout' | 'appearance' | 'design' | 'regression';
 
+/** Every check kind, in a stable order. */
+export const CHECK_KINDS: readonly CheckKind[] = ['functional', 'layout', 'appearance', 'design', 'regression'];
+
+/** Every status, in a stable order. */
+export const STATUSES: readonly Status[] = ['PASS', 'FAIL', 'REVIEW_REQUIRED', 'INCONCLUSIVE'];
+
 export type Platform = 'web' | 'ios' | 'android';
 
 /** Every platform Retina knows about. Used as the default project scope. */

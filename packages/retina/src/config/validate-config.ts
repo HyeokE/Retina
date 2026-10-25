@@ -12,6 +12,7 @@ import { REPORT_OPEN_VALUES, type ConfigIssue, type ConfigValidation, type Valid
 import { validateDesign } from './validate-design.ts';
 import { validateProfiles } from './validate-profiles.ts';
 import { validateProviders } from './validate-providers.ts';
+import { validateRequired } from './validate-required.ts';
 
 const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set([
   'profiles',
@@ -21,6 +22,7 @@ const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set([
   'scenarios',
   'baselines',
   'requiredEnv',
+  'required',
 ]);
 const REPORT_KEYS: ReadonlySet<string> = new Set(['open']);
 const REPORT_OPEN: ReadonlySet<unknown> = new Set(REPORT_OPEN_VALUES);
@@ -88,6 +90,7 @@ function configIssues(input: Readonly<Record<string, unknown>>): ConfigIssue[] {
     ...scenariosIssues(input['scenarios']),
     ...requiredStringIssues(input, 'baselines', ''),
     ...requiredEnvIssues(input['requiredEnv']),
+    ...validateRequired(input['required'], input['profiles']),
   ];
 }
 
