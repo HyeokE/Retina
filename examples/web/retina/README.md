@@ -1,6 +1,6 @@
 # Retina 소비자 설정 (web 예제)
 
-이 폴더는 Retina가 이 앱을 검증할 때 읽고 쓰는 자리예요. Retina에는 아직 API가 없어서 설정 코드(`retina.config.ts`)는 두지 않았어요. 폴더 구조와 앱이 이미 지키는 계약만 먼저 맞춰 뒀어요.
+이 폴더는 Retina가 이 앱을 검증할 때 읽고 쓰는 자리예요. 설정 코드(`retina.config.ts`)는 아직 두지 않았어요. 지금은 `retina-adapter-web`을 직접 부르는 시나리오 하나(`scenarios/profile-flow.test.ts`)가 있어요.
 
 ## 폴더별 용도
 
@@ -11,7 +11,7 @@
 | `retina/hooks/` | 실행 전후 훅(예: API `POST /__test/reset` 호출로 데이터 초기화) | 커밋 |
 | `.retina/baselines/` | 승인한 기준 이미지 | 커밋 |
 | `.retina/reviews/` | 사람이 내린 승인·반려 기록 | 커밋 |
-| `.retina/runs/` | 실행할 때마다 생기는 결과물 | 커밋 안 함(루트 `.gitignore`) |
+| `.retina/runs/` | 실행할 때마다 생기는 결과물 | 커밋 안 함(`examples/web/.gitignore`. 루트의 `.retina/runs/` 패턴은 저장소 루트에만 적용돼요) |
 
 ## 이 앱이 이미 지키는 계약
 
@@ -45,3 +45,12 @@ API는 실행별 저장소를 최대 50개 두고, 30분 안에 쓴 실행은 �
 1. 첫 Profile 화면: `/?retinaRun=<id>` 진입 후 `[data-retina-ready="profile"]`를 기다려요.
 2. 검증 오류가 난 Edit 화면: `/edit`에서 이름을 비우거나 이메일을 `not-an-email`로 바꾼 뒤 `save-button`을 눌러요. `error-name` 또는 `error-email`이 보여요.
 3. 저장 후 다시 들어온 Profile 화면: 올바른 값으로 저장하면 Profile로 돌아가요. 이때 Profile이 API에서 값을 다시 읽어요.
+
+## 시나리오 실행
+
+루트에서 `bun run example:web:scenario`로 실행해요. 서버를 띄우고 브라우저를 쓰기 때문에 기본 `bun run test`에는 들어가지 않아요. 먼저 Playwright 번들 Chromium이 필요해요(`npx playwright install --only-shell chromium`).
+
+- `beforeAll`에서 `TEST_MODE=1` API와 테스트 모드 빌드(`VITE_RETINA_TEST_MODE=1`, `VITE_API_BASE_URL`은 그 API)의 `vite preview`를 빈 포트에 띄워요. 직접 띄운 PID만 기록하고 `afterAll`에서 그 PID만 종료해요.
+- profile `web-desktop`(1440×900, DPR 1)과 `web-mobile`(390×844, DPR 3, `isMobile`, `hasTouch`)마다 위 캡처 지점 3개를 새 브라우저 context에서 3번 촬영해요. 반복마다 실행 ID를 새로 만들고 `POST /__test/reset`으로 초기화해요.
+- 같은 캡처 지점의 반복 촬영은 색 임계값 0으로 모든 쌍이 일치해야 해요(A/A).
+- 결과는 `.retina/runs/<runId>/`에 남아요. PNG, 테스트 모드 빌드(`web-dist/`), `summary.json`(환경 fingerprint, A/A 결과, 프로세스 종료 기록)이에요.

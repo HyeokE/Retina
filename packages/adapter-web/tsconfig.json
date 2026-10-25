@@ -1,0 +1,6 @@
+{
+  // Package-local check (`tsc -p packages/adapter-web`). Extends the root
+  // config so workspace resolution settings (e.g. export conditions) match.
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "test/**/*.ts", "test-browser/**/*.ts", "vitest.browser.config.ts"]
+}

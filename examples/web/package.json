@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "retina:scenario": "vitest run --config retina/vitest.config.ts"
   },
   "dependencies": {
     "react": "19.3.0",
@@ -22,6 +23,7 @@
     "retina": "workspace:*",
     "retina-adapter-web": "workspace:*",
     "typescript": "~6.0.3",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
   }
 }

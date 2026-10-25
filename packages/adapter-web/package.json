@@ -7,6 +7,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "playwright": "1.64.1",
+    "pngjs": "7.0.0",
     "retina": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/pngjs": "6.0.5"
   }
 }

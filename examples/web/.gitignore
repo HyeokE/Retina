@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Retina run artifacts (captures, test-mode build, summary). The root pattern
+# `.retina/runs/` is anchored to the repository root and does not cover this.
+.retina/runs/

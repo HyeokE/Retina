@@ -22,6 +22,8 @@
     "example:expo": "bun run --cwd examples/expo start",
     "example:build:apps": "bun run --filter retina-example-web build && bun run --filter retina-example-expo build",
     "example:build": "bun run example:build:apps && bun run --filter retina-example-api typecheck",
+    "test:adapter-web:browser": "vitest run --config packages/adapter-web/vitest.browser.config.ts",
+    "example:web:scenario": "bun run --cwd examples/web retina:scenario",
     "example:check:prod": "VITE_RETINA_TEST_MODE=0 EXPO_PUBLIC_RETINA_TEST_MODE=0 bun run example:build:apps && node examples/scripts/check-test-markers.mjs --expect=absent examples/web/dist examples/expo/dist/ios examples/expo/dist/android",
     "example:check:test": "VITE_RETINA_TEST_MODE=1 EXPO_PUBLIC_RETINA_TEST_MODE=1 VITE_BUILD_ID=retina-check EXPO_PUBLIC_BUILD_ID=retina-check bun run example:build:apps && node examples/scripts/check-test-markers.mjs --expect=present examples/web/dist examples/expo/dist/ios examples/expo/dist/android"
   },
