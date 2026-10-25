@@ -1,0 +1,15 @@
+{
+  "generator": "Built-in image_gen",
+  "revision": 2,
+  "direction": "Typography, negative space, thin comparison frames and a single blue difference marker",
+  "assets": [
+    {
+      "path": "retina-hero-v2.png",
+      "prompt": "Redesign this rejected Retina README banner completely. The reference is the design to replace, not a style to preserve. Use case: ads-marketing. Make a sophisticated ultra-minimal Swiss editorial software identity in a wide 3:1 banner. Flat warm-white canvas, almost-black typography, a tiny cobalt-blue accent, enormous deliberate negative space. Left half: very large beautifully kerned neo-grotesk wordmark, exact text \"Retina\", regular/medium weight, NOT chunky bold. Beneath it in small restrained monospace, exact text \"Visual validation\". On the right: a precise abstract UI difference study made from only two thin rectangular outline frames slightly offset, two or three hairline alignment guides, and one small solid cobalt square that marks the changed position. Quiet geometric balance, open spacing, sophisticated print-layout composition, crisp flat edges, subtle fine linework. An independent design studio's excellent developer-tool identity. Absolutely no camera lens, eye, aperture, devices, phones, browser mockups, glass, gradients, glow, shadows, perspective, 3D, textures, rounded-card dashboard, clipart, stock-tech illustration, claims, badges, extra labels, watermark. Keep all lettering clear and precise. The image should feel like considered typography and one elegant abstract comparison mark, with at least half the canvas empty."
+    },
+    {
+      "path": "retina-symbol-v2.png",
+      "prompt": "Completely redesign this rejected Retina symbol. The reference is only the old symbol to replace; preserve no aperture or eye imagery. Use case: logo-brand. A square flat minimal developer-tool brand mark on warm-white. Center one elegant graphic built from two almost-black opposing right-angle corner brackets forming a compact open square, plus one small cobalt-blue square offset at the upper-right corner to suggest a detected visual difference. Very precise geometry, consistent medium stroke weight, optical balance, lots of negative space; readable at favicon size. Sophisticated Swiss graphic identity, crisp vector-like raster edges. No circle, lens, eye, aperture, camera, gradients, 3D, shadows, perspective, texture, mockup, rounded app tile, letters, text, watermark. This is a simple original geometric identity matching a restrained typography-led Retina banner."
+    }
+  ]
+}

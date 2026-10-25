@@ -1,6 +1,6 @@
 # Retina
 
-![Retina — 웹과 모바일 화면을 광학 렌즈로 비교하는 브랜드 배너](docs/assets/retina-hero.png)
+![Retina — 타이포그래피와 겹친 프레임으로 화면 차이를 표현한 배너](docs/assets/retina-hero-v2.png)
 
 **개발 중인 화면부터 개발된 프로젝트까지, 검사한 범위와 근거를 함께 남기는 검증 도구를 만들어요.**
 
@@ -82,6 +82,6 @@ CI 실행 뒤 결과를 확인할 수 있는 **정적 HTML 리포트는 초기 �
 
 ## 브랜드 이미지
 
-<img src="docs/assets/retina-symbol.png" alt="Retina의 광학 조리개 형태 심볼" width="96" height="96">
+<img src="docs/assets/retina-symbol-v2.png" alt="프레임 모서리와 파란 차이 표시로 구성한 Retina 심볼" width="96" height="96">
 
-[배너](docs/assets/retina-hero.png)와 [심볼](docs/assets/retina-symbol.png)은 프로젝트 소개용 AI 생성 이미지예요. 실제 테스트 결과나 구현된 화면을 나타내지 않아요. [생성 프롬프트](docs/assets/image-prompts.json)도 함께 보관해요.
+[배너](docs/assets/retina-hero-v2.png)와 [심볼](docs/assets/retina-symbol-v2.png)은 프로젝트 소개용 AI 생성 이미지예요. 실제 테스트 결과나 구현된 화면을 나타내지 않아요. [생성 프롬프트](docs/assets/image-prompts-v2.json)도 함께 보관해요.
