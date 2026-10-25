@@ -1,4 +1,11 @@
 {
   "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    // Packages export their TypeScript sources and target Node type stripping,
+    // so relative imports keep their .ts extension and only erasable syntax is
+    // allowed (same settings as the examples).
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
   "include": ["packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "vitest.config.ts"]
 }
