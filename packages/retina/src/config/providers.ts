@@ -26,6 +26,14 @@ export interface ProviderContext {
   readonly platform: Platform;
   /** Adapter-specific driver or page handle. Opaque here; adapters narrow it. */
   readonly handle: unknown;
+  /**
+   * Aborted when the call's time budget elapses (see `runProvider`). Providers
+   * should stop work and release what they hold; the caller does not wait for
+   * a provider that ignores it.
+   */
+  readonly signal: AbortSignal;
+  /** Epoch milliseconds after which the call is abandoned as `provider_timeout`. */
+  readonly deadline: number;
 }
 
 /** A provider call made for one capture point of a scenario. Proposal. */

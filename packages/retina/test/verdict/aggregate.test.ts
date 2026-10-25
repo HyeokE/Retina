@@ -4,13 +4,14 @@ import {
   executionError,
   exitCodeFor,
   type AggregateInput,
+  type CheckKind,
   type Platform,
   type RequiredCase,
 } from '../../src/index.ts';
 import { caseResult, check, deepFreeze, passCase, reviewCheck } from '../helpers/fixtures.ts';
 
-function req(caseId: string, platform: Platform): RequiredCase {
-  return { caseId, platform };
+function req(caseId: string, platform: Platform, expectedChecks: readonly CheckKind[] = ['functional']): RequiredCase {
+  return { caseId, platform, expectedChecks };
 }
 
 const base: AggregateInput = {
@@ -41,7 +42,10 @@ describe('aggregateRun: happy path', () => {
   it('follows the worst case status', () => {
     const run = aggregateRun({
       ...base,
-      results: [passCase('a/web', 'web'), caseResult('a/ios', 'ios', [check('design', 'REVIEW_REQUIRED')])],
+      results: [
+        passCase('a/web', 'web'),
+        caseResult('a/ios', 'ios', [check('functional', 'PASS'), check('design', 'REVIEW_REQUIRED')]),
+      ],
     });
     expect(run.status).toBe('REVIEW_REQUIRED');
     expect(run.counts.REVIEW_REQUIRED).toBe(1);
@@ -154,6 +158,7 @@ describe('aggregateRun: scope', () => {
     expect(run.counts).toEqual({ PASS: 1, FAIL: 0, REVIEW_REQUIRED: 0, INCONCLUSIVE: 0 });
     expect(run.scope.kind).toBe('partial');
     expect(run.scope.excludedPlatforms).toEqual(['ios', 'android']);
+    expect(run.gateEligible).toBe(false);
   });
 
   it('labels a run full only when every project platform is declared and executed', () => {
@@ -224,7 +229,7 @@ describe('aggregateRun: execution errors', () => {
     const providerError = executionError('provider_error', 'auth provider failed', { platform: 'ios' });
     const run = aggregateRun({
       ...base,
-      requiredCases: [req('a/web', 'web')],
+      requiredCases: [req('a/web', 'web', ['layout'])],
       results: [caseResult('a/web', 'web', [check('layout', 'FAIL', { reasons: ['button overflows'] })])],
       executionErrors: [providerError],
     });
@@ -243,7 +248,13 @@ describe('aggregateRun: execution errors', () => {
 
 describe('aggregateRun: user acceptance (per check)', () => {
   function devRun(iosChecks: Parameters<typeof caseResult>[2], mode: AggregateInput['mode'] = 'dev') {
-    const run = aggregateRun({ ...base, mode, results: [passCase('a/web', 'web'), caseResult('a/ios', 'ios', iosChecks)] });
+    const kinds = [...new Set(iosChecks.map((c) => c.kind))];
+    const run = aggregateRun({
+      ...base,
+      mode,
+      requiredCases: [req('a/web', 'web'), req('a/ios', 'ios', kinds)],
+      results: [passCase('a/web', 'web'), caseResult('a/ios', 'ios', iosChecks)],
+    });
     return { run, ios: run.cases.find((c) => c.caseId === 'a/ios') };
   }
 
@@ -324,5 +335,125 @@ describe('aggregateRun: immutability', () => {
     const snapshot = structuredClone(input);
     expect(() => aggregateRun(deepFreeze(input))).not.toThrow();
     expect(input).toEqual(snapshot);
+  });
+});
+
+describe('aggregateRun: expected checks per required case', () => {
+  const single = { mode: 'validate', declaredPlatforms: ['web'], projectPlatforms: ['web'] } as const;
+
+  it('turns a missing expected check into an INCONCLUSIVE check_missing, even when the other check passes', () => {
+    const run = aggregateRun({
+      ...single,
+      requiredCases: [req('a/web', 'web', ['functional', 'regression'])],
+      results: [passCase('a/web', 'web')],
+    });
+    expect(run.status).toBe('INCONCLUSIVE');
+    expect(run.cases[0]).toMatchObject({ status: 'INCONCLUSIVE', missingChecks: ['regression'] });
+    expect(run.cases[0]?.reasons).toContain('check_missing');
+    expect(run.counts.INCONCLUSIVE).toBe(1);
+    expect(run.executionErrors).toEqual([]);
+    expect(exitCodeFor(run)).toBe(3);
+  });
+
+  it('passes when every expected check is present and PASS', () => {
+    const run = aggregateRun({
+      ...single,
+      requiredCases: [req('a/web', 'web', ['functional', 'regression'])],
+      results: [caseResult('a/web', 'web', [check('regression', 'PASS'), check('functional', 'PASS')])],
+    });
+    expect(run.status).toBe('PASS');
+    expect(run.cases[0]?.missingChecks).toEqual([]);
+    expect(run.gateEligible).toBe(true);
+    expect(exitCodeFor(run)).toBe(0);
+  });
+
+  it('still counts an extra, unexpected check kind', () => {
+    const run = aggregateRun({
+      ...single,
+      requiredCases: [req('a/web', 'web', ['functional'])],
+      results: [caseResult('a/web', 'web', [check('functional', 'PASS'), check('layout', 'FAIL')])],
+    });
+    expect(run.status).toBe('FAIL');
+  });
+
+  it('does not let a missing expected check be accepted away in dev mode', () => {
+    const run = aggregateRun({
+      ...single,
+      mode: 'dev',
+      requiredCases: [req('a/web', 'web', ['design', 'regression'])],
+      results: [caseResult('a/web', 'web', [reviewCheck('design', 'sha256:d', 'sha256:d')])],
+    });
+    expect(run.status).toBe('INCONCLUSIVE');
+    expect(run.acceptedCaseIds).toEqual([]);
+  });
+
+  it('records an execution error for an empty expectedChecks', () => {
+    const run = aggregateRun({ ...single, requiredCases: [req('a/web', 'web', [])], results: [passCase('a/web', 'web')] });
+    expect(run.executionErrors).toEqual([
+      expect.objectContaining({ code: 'invalid_expected_checks', caseId: 'a/web', platform: 'web' }),
+    ]);
+    expect(exitCodeFor(run)).toBe(2);
+    expect(run.gateEligible).toBe(false);
+  });
+
+  it('records an execution error for repeated kinds in expectedChecks', () => {
+    const run = aggregateRun({
+      ...single,
+      requiredCases: [req('a/web', 'web', ['functional', 'functional'])],
+      results: [passCase('a/web', 'web')],
+    });
+    expect(run.executionErrors.map((error) => error.code)).toEqual(['invalid_expected_checks']);
+    expect(exitCodeFor(run)).toBe(2);
+  });
+
+  it('records duplicate_check_kind when a result repeats a check kind, so one PASS cannot mask the other', () => {
+    const run = aggregateRun({
+      ...single,
+      requiredCases: [req('a/web', 'web', ['functional'])],
+      results: [caseResult('a/web', 'web', [check('functional', 'PASS'), check('functional', 'PASS')])],
+    });
+    expect(run.executionErrors).toEqual([
+      expect.objectContaining({ code: 'duplicate_check_kind', caseId: 'a/web', platform: 'web' }),
+    ]);
+    expect(run.status).toBe('INCONCLUSIVE');
+    expect(exitCodeFor(run)).toBe(2);
+  });
+
+  it('merges the expected checks of a required case declared twice', () => {
+    const run = aggregateRun({
+      ...single,
+      requiredCases: [req('a/web', 'web', ['functional']), req('a/web', 'web', ['regression'])],
+      results: [passCase('a/web', 'web')],
+    });
+    expect(run.cases[0]?.missingChecks).toEqual(['regression']);
+    expect(run.status).toBe('INCONCLUSIVE');
+  });
+});
+
+describe('aggregateRun: gate eligibility needs full scope', () => {
+  it('is eligible for a web-only plan whose project platforms are web only', () => {
+    const run = aggregateRun({
+      mode: 'validate',
+      declaredPlatforms: ['web'],
+      projectPlatforms: ['web'],
+      requiredCases: [req('a/web', 'web')],
+      results: [passCase('a/web', 'web')],
+    });
+    expect(run.scope.kind).toBe('full');
+    expect(run.gateEligible).toBe(true);
+  });
+
+  it('is never eligible for a narrowed web-only run of a three-platform plan, even with PASS and exit 0', () => {
+    const run = aggregateRun({
+      mode: 'validate',
+      declaredPlatforms: ['web'],
+      projectPlatforms: ['web', 'ios', 'android'],
+      requiredCases: [req('a/web', 'web'), req('a/ios', 'ios'), req('a/android', 'android')],
+      results: [passCase('a/web', 'web')],
+    });
+    expect(run.status).toBe('PASS');
+    expect(exitCodeFor(run)).toBe(0);
+    expect(run.scope.kind).toBe('partial');
+    expect(run.gateEligible).toBe(false);
   });
 });

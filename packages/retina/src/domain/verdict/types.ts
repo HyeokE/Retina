@@ -52,10 +52,16 @@ export interface CaseResult {
   readonly checks: readonly CheckResult[];
 }
 
-/** A case the project requires, on the platform where it must run. */
+/**
+ * A case the project requires, on the platform where it must run, with the
+ * check kinds it must report. `expectedChecks` must be non-empty and unique; a
+ * missing kind becomes an INCONCLUSIVE `check_missing` check, so deleting one
+ * check cannot be hidden by another check of the same case.
+ */
 export interface RequiredCase {
   readonly caseId: string;
   readonly platform: Platform;
+  readonly expectedChecks: readonly CheckKind[];
 }
 
 /** Reason codes the verdict domain adds on its own. */
@@ -64,6 +70,7 @@ export const VERDICT_REASONS = {
   platformMissing: 'platform_missing',
   executionError: 'execution_error',
   noChecks: 'no_checks',
+  checkMissing: 'check_missing',
   acceptanceRequiresDevMode: 'acceptance_requires_dev_mode',
   acceptanceRequiresReviewRequired: 'acceptance_requires_review_required',
   acceptanceHashMismatch: 'acceptance_hash_mismatch',

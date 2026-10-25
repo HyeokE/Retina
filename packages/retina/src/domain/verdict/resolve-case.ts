@@ -1,4 +1,4 @@
-import { caseStatus } from './status.ts';
+import { worstStatus } from './status.ts';
 import {
   VERDICT_REASONS,
   type Acceptance,
@@ -16,7 +16,9 @@ export interface ResolvedCase {
   readonly platform: Platform;
   readonly profile: string;
   readonly required: boolean;
-  /** Worst of the checks, before acceptance. */
+  /** Expected check kinds the result did not report; each counts as an INCONCLUSIVE check. */
+  readonly missingChecks: readonly CheckKind[];
+  /** Worst of the checks (including missing expected ones), before acceptance. */
   readonly autoStatus: Status;
   /** PASS when every non-PASS check was validly accepted, otherwise `autoStatus`. */
   readonly status: Status;
@@ -50,11 +52,13 @@ function isAccepted(check: CheckResult, mode: RunMode): boolean {
   return check.acceptance !== undefined && acceptanceBlocker(check, check.acceptance, mode) === undefined;
 }
 
-function checkReasons(result: CaseResult): readonly string[] {
-  if (result.checks.length === 0) {
-    return [VERDICT_REASONS.noChecks];
-  }
-  return result.checks.filter((check) => check.status !== 'PASS').flatMap((check) => check.reasons);
+function checkReasons(result: CaseResult, checks: readonly CheckResult[]): readonly string[] {
+  const failing = checks.filter((check) => check.status !== 'PASS').flatMap((check) => check.reasons);
+  return result.checks.length === 0 ? [VERDICT_REASONS.noChecks, ...failing] : failing;
+}
+
+function missingCheck(kind: CheckKind): CheckResult {
+  return { kind, status: 'INCONCLUSIVE', reasons: [VERDICT_REASONS.checkMissing] };
 }
 
 function ignoredAcceptanceReasons(result: CaseResult, mode: RunMode): readonly string[] {
@@ -66,26 +70,35 @@ function ignoredAcceptanceReasons(result: CaseResult, mode: RunMode): readonly s
 }
 
 /**
- * Applies the run mode to one case. The case becomes PASS only when it is
- * REVIEW_REQUIRED (no FAIL, no INCONCLUSIVE) and every non-PASS check carries
- * a valid acceptance of its own. Invalid acceptances are ignored and the
- * reason is recorded.
+ * Applies the run mode to one case. Each kind in `expectedChecks` that the
+ * result does not report is added as an INCONCLUSIVE `check_missing` check.
+ * The case becomes PASS only when it is REVIEW_REQUIRED (no FAIL, no
+ * INCONCLUSIVE) and every non-PASS check carries a valid acceptance of its
+ * own. Invalid acceptances are ignored and the reason is recorded.
  */
-export function resolveCase(result: CaseResult, mode: RunMode, required: boolean): ResolvedCase {
-  const autoStatus = caseStatus(result);
+export function resolveCase(
+  result: CaseResult,
+  mode: RunMode,
+  required: boolean,
+  expectedChecks: readonly CheckKind[] = [],
+): ResolvedCase {
+  const present = new Set(result.checks.map((check) => check.kind));
+  const missingChecks = [...new Set(expectedChecks)].filter((kind) => !present.has(kind));
+  const checks = [...result.checks, ...missingChecks.map(missingCheck)];
+  const autoStatus = worstStatus(checks.map((check) => check.status));
   const acceptedChecks = result.checks.filter((check) => isAccepted(check, mode)).map((check) => check.kind);
   const accepted =
-    autoStatus === 'REVIEW_REQUIRED' &&
-    result.checks.every((check) => check.status === 'PASS' || isAccepted(check, mode));
+    autoStatus === 'REVIEW_REQUIRED' && checks.every((check) => check.status === 'PASS' || isAccepted(check, mode));
   return {
     caseId: result.caseId,
     platform: result.platform,
     profile: result.profile,
     required,
+    missingChecks,
     autoStatus,
     status: accepted ? 'PASS' : autoStatus,
     accepted,
     acceptedChecks,
-    reasons: [...checkReasons(result), ...ignoredAcceptanceReasons(result, mode)],
+    reasons: [...checkReasons(result, checks), ...ignoredAcceptanceReasons(result, mode)],
   };
 }

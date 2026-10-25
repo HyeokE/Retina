@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { aggregateRun, mergeReview, type CaseResult, type CaseReview, type ReviewMergeOutcome } from '../../src/index.ts';
-import { caseResult, check, deepFreeze } from '../helpers/fixtures.ts';
+import { caseResult, check, deepFreeze, requiredFor } from '../helpers/fixtures.ts';
 
 const hashes = { expected: 'sha256:e', actual: 'sha256:a', diff: 'sha256:d' } as const;
 
@@ -107,7 +107,7 @@ describe('mergeReview: user acceptance', () => {
       mode: 'dev',
       declaredPlatforms: ['web'],
       projectPlatforms: ['web'],
-      requiredCases: [{ caseId: result.caseId, platform: result.platform }],
+      requiredCases: [requiredFor(result)],
       results: [result],
     });
     expect(run).toMatchObject({ kind: 'aggregate', status: 'PASS', gateEligible: false });
@@ -159,7 +159,7 @@ describe('mergeReview: acceptance on a case with two REVIEW_REQUIRED checks', ()
       mode: 'dev',
       declaredPlatforms: ['web'],
       projectPlatforms: ['web'],
-      requiredCases: [{ caseId: result.caseId, platform: result.platform }],
+      requiredCases: [requiredFor(result)],
       results: [result],
     }).status;
   }

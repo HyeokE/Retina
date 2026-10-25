@@ -7,7 +7,7 @@ import {
   type AggregateInput,
   type CaseResult,
 } from '../../src/index.ts';
-import { caseResult, check, passCase, reviewCheck } from '../helpers/fixtures.ts';
+import { caseResult, check, passCase, requiredFor, reviewCheck } from '../helpers/fixtures.ts';
 
 function run(results: readonly CaseResult[], overrides: Partial<AggregateInput> = {}): number {
   return exitCodeFor(
@@ -15,7 +15,7 @@ function run(results: readonly CaseResult[], overrides: Partial<AggregateInput> 
       mode: 'validate',
       declaredPlatforms: ['web'],
       projectPlatforms: ['web'],
-      requiredCases: results.map((r) => ({ caseId: r.caseId, platform: r.platform })),
+      requiredCases: results.map((r) => requiredFor(r)),
       results,
       ...overrides,
     }),
@@ -52,7 +52,7 @@ describe('exitCodeFor', () => {
       mode: 'validate',
       declaredPlatforms: ['web', 'android'],
       projectPlatforms: ['web', 'android'],
-      requiredCases: [{ caseId: 'a', platform: 'web' }],
+      requiredCases: [{ caseId: 'a', platform: 'web', expectedChecks: ['functional'] }],
       results: [caseResult('a', 'web', [check('functional', 'FAIL', { reasons: ['save did not persist'] })])],
       executionErrors: [executionError('provider_error', 'emulator did not boot', { platform: 'android' })],
     });
@@ -67,8 +67,8 @@ describe('exitCodeFor', () => {
     expect(run([passCase('a', 'web'), caseResult('b', 'web', [])])).toBe(3);
     expect(run([passCase('a', 'web')], {
       requiredCases: [
-        { caseId: 'a', platform: 'web' },
-        { caseId: 'missing', platform: 'web' },
+        { caseId: 'a', platform: 'web', expectedChecks: ['functional'] },
+        { caseId: 'missing', platform: 'web', expectedChecks: ['functional'] },
       ],
     })).toBe(3);
   });
@@ -79,7 +79,7 @@ describe('exitCodeFor', () => {
       mode: 'dev',
       declaredPlatforms: ['web'],
       projectPlatforms: ['web'],
-      requiredCases: [{ caseId: 'a', platform: 'web' }],
+      requiredCases: [requiredFor(accepted)],
       results: [accepted],
     });
     expect(exitCodeFor(outcome)).toBe(0);

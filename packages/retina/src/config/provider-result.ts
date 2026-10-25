@@ -1,3 +1,8 @@
+import {
+  executionError,
+  type ExecutionError,
+  type ExecutionErrorLocation,
+} from '../domain/verdict/execution-error.ts';
 import type { CheckKind, CheckResult, Status } from '../domain/verdict/types.ts';
 
 /**
@@ -35,6 +40,7 @@ export const PROVIDER_REASONS = {
   failed: 'provider_failed',
   threw: 'provider_threw',
   invalidResult: 'provider_invalid_result',
+  timeout: 'provider_timeout',
 } as const;
 
 export type ProviderReason = (typeof PROVIDER_REASONS)[keyof typeof PROVIDER_REASONS];
@@ -98,28 +104,84 @@ function isProviderResult(value: unknown): value is ProviderResult<object> {
 }
 
 /**
- * Calls a provider defensively. A missing provider, a reported failure, a
- * thrown error or a malformed result are all INCONCLUSIVE. A thrown error is
- * recorded by its name only, because its message may carry secret values.
+ * Time budget of one provider call. Unlimited waiting is not allowed, so at
+ * least one bound is required; with both, the earlier one wins. `deadline` is
+ * epoch milliseconds, usually `ProviderContext.deadline`.
+ */
+export type ProviderTimeLimit =
+  | { readonly timeoutMs: number; readonly deadline?: number }
+  | { readonly deadline: number; readonly timeoutMs?: number };
+
+const TIMED_OUT = Symbol('timed-out');
+
+type Settled = { readonly kind: 'returned'; readonly value: unknown } | { readonly kind: 'threw'; readonly name: string };
+
+function budgetMs(limit: ProviderTimeLimit): number {
+  const bounds = [limit.timeoutMs, limit.deadline === undefined ? undefined : limit.deadline - Date.now()];
+  return Math.min(...bounds.filter((bound): bound is number => bound !== undefined));
+}
+
+/** Never rejects, so a provider that rejects after the timeout causes no unhandled rejection. */
+async function settle(call: () => Promise<unknown>): Promise<Settled> {
+  try {
+    return { kind: 'returned', value: await call() };
+  } catch (error) {
+    return { kind: 'threw', name: error instanceof Error ? error.name : typeof error };
+  }
+}
+
+/** Resolves after `ms` and aborts `controller`; `clear` cancels both. */
+function startTimer(ms: number, controller: AbortController): { readonly elapsed: Promise<typeof TIMED_OUT>; readonly clear: () => void } {
+  let id: ReturnType<typeof setTimeout> | undefined;
+  const elapsed = new Promise<typeof TIMED_OUT>((resolve) => {
+    id = setTimeout(() => {
+      controller.abort();
+      resolve(TIMED_OUT);
+    }, ms);
+  });
+  return { elapsed, clear: () => clearTimeout(id) };
+}
+
+function interpret<T extends object>(provider: ProviderName, settled: Settled): ProviderOutcome<T> {
+  if (settled.kind === 'threw') {
+    return blocked(provider, PROVIDER_REASONS.threw, `provider threw ${settled.name}`);
+  }
+  if (!isProviderResult(settled.value)) {
+    return blocked(provider, PROVIDER_REASONS.invalidResult);
+  }
+  return providerOutcome(provider, settled.value as ProviderResult<T>);
+}
+
+/**
+ * Calls a provider defensively within a time budget. A missing provider, a
+ * reported failure, a thrown error, a malformed result or an elapsed budget
+ * are all INCONCLUSIVE. On timeout the signal passed to `call` is aborted and
+ * the caller returns at once, even if the provider ignores the signal. The
+ * timer is always cleared. A thrown error is recorded by its name only,
+ * because its message may carry secret values.
  */
 export async function runProvider<T extends object>(
   provider: ProviderName,
-  call: (() => Promise<ProviderResult<T>>) | undefined,
+  call: ((signal: AbortSignal) => Promise<ProviderResult<T>>) | undefined,
+  limit: ProviderTimeLimit,
 ): Promise<ProviderOutcome<T>> {
   if (call === undefined) {
     return blocked(provider, PROVIDER_REASONS.missing);
   }
-  let result: unknown;
+  const ms = budgetMs(limit);
+  if (!(ms > 0)) {
+    return blocked(provider, PROVIDER_REASONS.timeout, 'deadline passed before the call');
+  }
+  const controller = new AbortController();
+  const timer = startTimer(ms, controller);
   try {
-    result = await call();
-  } catch (error) {
-    const name = error instanceof Error ? error.name : typeof error;
-    return blocked(provider, PROVIDER_REASONS.threw, `provider threw ${name}`);
+    const settled = await Promise.race([settle(() => call(controller.signal)), timer.elapsed]);
+    return settled === TIMED_OUT
+      ? blocked(provider, PROVIDER_REASONS.timeout, `provider exceeded ${ms} ms`)
+      : interpret<T>(provider, settled);
+  } finally {
+    timer.clear();
   }
-  if (!isProviderResult(result)) {
-    return blocked(provider, PROVIDER_REASONS.invalidResult);
-  }
-  return providerOutcome(provider, result as ProviderResult<T>);
 }
 
 /** The INCONCLUSIVE check a blocked provider stands for. */
@@ -129,4 +191,18 @@ export function providerBlockedCheck(kind: CheckKind, outcome: ProviderBlocked):
     status: outcome.status,
     reasons: [`${outcome.code}:${outcome.provider}`, ...(outcome.detail !== undefined ? [outcome.detail] : [])],
   };
+}
+
+/**
+ * The execution error a blocked provider stands for (exit code 2). It carries
+ * the provider name and reason code only, never `detail`. The run layer adds
+ * it to `executionErrors` next to the INCONCLUSIVE check from
+ * `providerBlockedCheck`.
+ */
+export function providerBlockedError(outcome: ProviderBlocked, location: ExecutionErrorLocation = {}): ExecutionError {
+  const code = outcome.code === PROVIDER_REASONS.timeout ? 'provider_timeout' : 'provider_error';
+  return executionError(code, `Provider "${outcome.provider}" blocked the run (${outcome.code}).`, location, {
+    provider: outcome.provider,
+    reason: outcome.code,
+  });
 }

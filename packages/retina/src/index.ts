@@ -18,6 +18,7 @@ export type { ResolvedCase } from './domain/verdict/resolve-case.ts';
 export { resolveCase } from './domain/verdict/resolve-case.ts';
 export type {
   ExecutionError,
+  ExecutionErrorCause,
   ExecutionErrorCode,
   ExecutionErrorLocation,
 } from './domain/verdict/execution-error.ts';
@@ -93,12 +94,14 @@ export type {
   ProviderReason,
   ProviderResult,
   ProviderSuccess,
+  ProviderTimeLimit,
 } from './config/provider-result.ts';
 export {
   PROVIDER_FAILURE_STATUS,
   PROVIDER_NAMES,
   PROVIDER_REASONS,
   providerBlockedCheck,
+  providerBlockedError,
   providerOutcome,
   runProvider,
 } from './config/provider-result.ts';

@@ -2,6 +2,7 @@ import type {
   Acceptance,
   CaseResult,
   CheckKind,
+  RequiredCase,
   CheckResult,
   ImageHashes,
   Platform,
@@ -42,6 +43,19 @@ export function caseResult(
   profile: string = `${platform}-default`,
 ): CaseResult {
   return { caseId, platform, profile, checks };
+}
+
+/**
+ * The required case a result stands for. Expected checks default to the
+ * result's own check kinds, or `functional` for a result without checks.
+ */
+export function requiredFor(result: CaseResult, expectedChecks?: readonly CheckKind[]): RequiredCase {
+  const own = [...new Set(result.checks.map((c) => c.kind))];
+  return {
+    caseId: result.caseId,
+    platform: result.platform,
+    expectedChecks: expectedChecks ?? (own.length > 0 ? own : ['functional']),
+  };
 }
 
 export function passCase(caseId: string, platform: Platform): CaseResult {
