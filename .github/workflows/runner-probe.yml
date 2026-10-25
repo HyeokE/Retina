@@ -22,6 +22,7 @@ jobs:
             echo "## memory"; free -h
             echo "## disk"; df -h /
             echo "## kvm"; ls -l /dev/kvm 2>&1 || echo "no /dev/kvm"
+            echo "user: $(id)"; test -r /dev/kvm -a -w /dev/kvm && echo "kvm accessible by runner user" || echo "kvm NOT accessible by runner user"
             echo "## node"; node --version
             echo "## docker"; docker --version 2>&1 || true
             echo "## android sdk"; echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
@@ -50,6 +51,7 @@ jobs:
             echo "## disk"; df -h /
             echo "## node"; node --version
             echo "## xcode"; xcodebuild -version
+            echo "## installed xcodes"; ls -d /Applications/Xcode*.app 2>&1
             echo "## simulator runtimes"; xcrun simctl list runtimes
             echo "## iphone device types"; xcrun simctl list devicetypes | grep -i iphone | head -20
           } > "$out" 2>&1
