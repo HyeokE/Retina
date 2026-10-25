@@ -3,3 +3,11 @@
 
 # macOS metadata
 .DS_Store
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Retina run artifacts
+.retina/runs/

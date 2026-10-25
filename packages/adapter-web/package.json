@@ -1,0 +1,12 @@
+{
+  "name": "retina-adapter-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "retina": "workspace:*"
+  }
+}
