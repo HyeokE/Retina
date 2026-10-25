@@ -1,0 +1,61 @@
+# Records the hardware and toolchain of GitHub-hosted runners (plan task G-A2).
+# Manual only: it never runs on push or pull_request.
+name: runner-probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Probe Linux runner
+        run: |
+          set -u
+          out=probe-linux.txt
+          {
+            echo "## system"; uname -a; echo "arch: $(uname -m)"; nproc
+            echo "## memory"; free -h
+            echo "## disk"; df -h /
+            echo "## kvm"; ls -l /dev/kvm 2>&1 || echo "no /dev/kvm"
+            echo "## node"; node --version
+            echo "## docker"; docker --version 2>&1 || true
+            echo "## android sdk"; echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+            ls "${ANDROID_HOME:-/nonexistent}/system-images" 2>&1 || true
+            ls "${ANDROID_HOME:-/nonexistent}/emulator" 2>&1 | head -5 || true
+            echo "## fonts"; fc-list 2>/dev/null | wc -l
+          } > "$out" 2>&1
+          cat "$out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe-linux
+          path: probe-linux.txt
+          retention-days: 14
+
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - name: Probe macOS runner
+        run: |
+          set -u
+          out=probe-macos.txt
+          {
+            echo "## system"; uname -a; echo "arch: $(uname -m)"; sysctl -n hw.ncpu
+            echo "## memory"; echo "$(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 )) GB"
+            echo "## disk"; df -h /
+            echo "## node"; node --version
+            echo "## xcode"; xcodebuild -version
+            echo "## simulator runtimes"; xcrun simctl list runtimes
+            echo "## iphone device types"; xcrun simctl list devicetypes | grep -i iphone | head -20
+          } > "$out" 2>&1
+          cat "$out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe-macos
+          path: probe-macos.txt
+          retention-days: 14
