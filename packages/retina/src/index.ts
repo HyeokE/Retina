@@ -1,4 +1,4 @@
-// Public domain API: verdict model, aggregation, exit codes and pixel comparison.
+// Public API: verdict model, aggregation, exit codes, pixel comparison and config.
 
 export type {
   Acceptance,
@@ -55,3 +55,75 @@ export type {
 export { comparePixels } from './domain/compare/compare-pixels.ts';
 export type { DiffRegion, DiffRegionList, DiffRegionOptions, DiffRegionsOutcome } from './domain/compare/diff-regions.ts';
 export { diffRegions } from './domain/compare/diff-regions.ts';
+
+// Public config API: retina.config.ts shape, validation and provider contracts (proposals).
+
+export type {
+  AndroidDevice,
+  AndroidProfile,
+  ColorScheme,
+  ConfigIssue,
+  ConfigIssueCode,
+  ConfigValidation,
+  DesignConfig,
+  DesignFrame,
+  IosDevice,
+  IosProfile,
+  Profile,
+  ReportConfig,
+  ReportOpen,
+  RetinaConfig,
+  ValidatedConfig,
+  WebProfile,
+  WebViewport,
+} from './config/types.ts';
+export { REPORT_OPEN_VALUES } from './config/types.ts';
+export { defineConfig } from './config/define-config.ts';
+export { validateConfig } from './config/validate-config.ts';
+export type { FigmaFrameRef, FigmaUrlErrorCode } from './config/figma-url.ts';
+export { parseFigmaFrameUrl } from './config/figma-url.ts';
+export { checkRequiredEnv, isValidEnvName } from './config/required-env.ts';
+export type {
+  ProviderBlocked,
+  ProviderFailure,
+  ProviderFailureStatus,
+  ProviderName,
+  ProviderOutcome,
+  ProviderProceed,
+  ProviderReason,
+  ProviderResult,
+  ProviderSuccess,
+} from './config/provider-result.ts';
+export {
+  PROVIDER_FAILURE_STATUS,
+  PROVIDER_NAMES,
+  PROVIDER_REASONS,
+  providerBlockedCheck,
+  providerOutcome,
+  runProvider,
+} from './config/provider-result.ts';
+export type {
+  AuthProvider,
+  BuildIdentity,
+  BuildIdentityProvider,
+  CheckpointContext,
+  DataProvider,
+  EnvOverrides,
+  EnvOverrideValues,
+  FixtureContext,
+  FixtureHooks,
+  JsonValue,
+  LocatorMap,
+  LocatorResolution,
+  NavigationContext,
+  Navigator,
+  PlatformLocators,
+  ProviderContext,
+  ReadyContext,
+  ReadySignal,
+  RetinaProviders,
+  SchemaIssue,
+  SchemaSubject,
+  SchemaValidator,
+} from './config/providers.ts';
+export { resolveLocator } from './config/providers.ts';
