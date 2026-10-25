@@ -1,6 +1,4 @@
-import { createServer } from 'node:http';
-import { createRequestHandler } from './routes.ts';
-import { createRunStoreRegistry } from './run-stores.ts';
+import { createApiServer } from './app.ts';
 
 const DEFAULT_PORT = 4010;
 
@@ -18,7 +16,7 @@ const port = readPort(process.env['PORT']);
 const host = process.env['HOST'] ?? '127.0.0.1';
 const testMode = process.env['TEST_MODE'] === '1';
 
-const server = createServer(createRequestHandler({ registry: createRunStoreRegistry(), testMode }));
+const server = createApiServer({ testMode });
 
 server.listen(port, host, () => {
   console.info(`[example-api] listening on http://${host}:${port} (TEST_MODE=${testMode ? '1' : '0'})`);

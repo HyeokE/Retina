@@ -25,16 +25,22 @@
 
 - **준비 표시**: 화면 루트의 `data-retina-ready="profile"` 또는 `data-retina-ready="edit"`. API 데이터를 받은 뒤에만 붙고, 로딩·오류 화면에는 붙지 않아요.
 - **빌드 식별자**: `<meta name="retina-build-id" content="...">`. 값은 빌드 시점의 `VITE_BUILD_ID`이고, 없으면 `dev`예요.
-- **실행 ID**: `/?retinaRun=<id>`로 열면 ID를 `sessionStorage`에 보관해요. 이후 API 요청마다 `X-Retina-Run: <id>` 헤더로 보내요. ID는 `^[A-Za-z0-9._-]{1,64}$`를 만족해야 하고, 맞지 않으면 무시해요. 실행 ID는 실행할 때마다 바뀌어서 빌드 시점이 아니라 실행 시점에 넣어요.
+- **실행 ID**: `/?retinaRun=<id>`로 열면 ID를 `sessionStorage`에 보관해요. 이후 API 요청마다 `X-Retina-Run: <id>` 헤더로 보내요. ID는 `^[A-Za-z0-9._-]{1,64}$`를 만족해야 해요. 실행 ID는 실행할 때마다 바뀌어서 빌드 시점이 아니라 실행 시점에 넣어요.
+  - URL이 기준이에요. 테스트 빌드에서는 앱 안에서 이동할 때(`/` ↔ `/edit`, 모르는 경로 정리 포함)도 `retinaRun` 쿼리를 그대로 유지해요. 그래서 저장 → 재진입 → 새로고침을 거쳐도 같은 값을 써요.
+  - `sessionStorage`는 URL에 `retinaRun`이 아예 없을 때만 쓰는 보조 수단이에요. 새 값은 먼저 메모리에 두고 저장은 가능할 때만 해요. 저장에 실패하면 이전에 저장된 값을 지워서, 예전 실행 ID가 다시 살아나지 않게 해요.
+  - URL에 명시한 값이 형식에 맞지 않거나 비어 있으면 이전 실행 ID로 돌아가지 않아요. 저장된 값을 지우고 API 요청을 아예 보내지 않아요(차단). 화면은 오류 상태에 머물고 ready 표시가 붙지 않아서 그 실행은 판정 불가로 끝나요. 다른 실행의 데이터를 건드리지 않아요.
 
 빌드 결과는 루트에서 확인해요.
 
 - `bun run example:check:prod`: 플래그를 끈 채 빌드하고 `retina-ready`, `retina-build-id`, `__test/`가 한 번도 없어야 통과해요.
 - `bun run example:check:test`: 플래그를 켠 채 빌드하고 표시가 실제로 있어야 통과해요. 검사가 빈 껍데기가 아님을 보여 줘요.
+- 두 검사 모두 `examples/web/dist`, `examples/expo/dist/ios`, `examples/expo/dist/android`를 따로 검사해요. 폴더 하나라도 없거나 비어 있으면 실패(종료 코드 2)예요.
 
 ## 캡처 지점
 
-실행 전에 `TEST_MODE=1`로 API를 띄우고(`bun run example:api:test`), 실행 ID를 정해 `POST /__test/reset`에 `X-Retina-Run` 헤더와 함께 보내요. 그러면 그 실행의 데이터만 기준값으로 돌아가요.
+실행 전에 `TEST_MODE=1`로 API를 띄우고(`bun run example:api:test`), 실행 ID를 정해 `POST /__test/reset`에 `X-Retina-Run` 헤더와 함께 보내요. 그러면 그 실행의 데이터만 기준값으로 돌아가요. 실행이 끝나면 같은 헤더로 `POST /__test/runs/end`를 호출해 자리를 돌려줘요.
+
+API는 실행별 저장소를 최대 50개 두고, 30분 안에 쓴 실행은 절대 지우지 않아요. 자리가 모두 사용 중이면 새 실행 ID만 `503 { "error": "run_capacity_exceeded" }`로 거절해요. 기존 실행을 초기화하지는 않아요.
 
 1. 첫 Profile 화면: `/?retinaRun=<id>` 진입 후 `[data-retina-ready="profile"]`를 기다려요.
 2. 검증 오류가 난 Edit 화면: `/edit`에서 이름을 비우거나 이메일을 `not-an-email`로 바꾼 뒤 `save-button`을 눌러요. `error-name` 또는 `error-email`이 보여요.

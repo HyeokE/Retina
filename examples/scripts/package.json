@@ -1,0 +1,13 @@
+{
+  "name": "retina-example-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^7.0.2"
+  }
+}

@@ -27,9 +27,11 @@
 
 - **준비 표시**: `testID="retina-ready-profile"`, `testID="retina-ready-edit"` 요소는 API 데이터를 받은 뒤에만 그려져요. 1x1 크기의 투명한 요소라 스크린샷에는 보이지 않아요.
 - **빌드 식별자**: `testID="retina-build-id"`인 투명 텍스트에 `EXPO_PUBLIC_BUILD_ID` 값(없으면 `dev`)이 들어가요. 실제 프로젝트에서는 expo-updates나 별도 제공자로 바꿔도 돼요.
-- **실행 ID**: 딥링크에 `run` 쿼리를 붙여요(`retina-example://profile?run=<id>`). ID는 메모리에만 두고, 이후 API 요청마다 `X-Retina-Run: <id>` 헤더로 보내요. 네이티브 환경 변수는 번들 시점에 고정되므로 실행 ID는 실행 시점에 딥링크로 받아요. `^[A-Za-z0-9._-]{1,64}$`에 맞지 않으면 무시해요.
+- **실행 ID**: 딥링크에 `run` 쿼리를 붙여요(`retina-example://profile?run=<id>`). ID는 메모리에만 두고, 이후 API 요청마다 `X-Retina-Run: <id>` 헤더로 보내요. 네이티브 환경 변수는 번들 시점에 고정되므로 실행 ID는 실행 시점에 딥링크로 받아요.
+  - `run`이 없는 링크(예: 앱 안의 `retina-example://edit`)는 현재 실행 ID를 유지해요.
+  - `run`이 `^[A-Za-z0-9._-]{1,64}$`에 맞지 않거나 비어 있거나 여러 번 들어 있으면, 이전 ID를 지우고 API 요청을 아예 보내지 않아요(차단). 그 실행은 판정 불가로 끝나요. 이후 올바른 `run`이 담긴 링크가 오면 다시 풀려요.
 
-빌드 결과는 루트의 `bun run example:check:prod`(표시가 없어야 통과)와 `bun run example:check:test`(표시가 있어야 통과)로 확인해요. Hermes 바이트코드(`.hbc`)는 바이트 단위로 검사해요.
+빌드 결과는 루트의 `bun run example:check:prod`(표시가 없어야 통과)와 `bun run example:check:test`(표시가 있어야 통과)로 확인해요. `dist/ios`와 `dist/android`를 따로 검사하므로 한 플랫폼에만 표시가 있으면 실패해요. Hermes 바이트코드(`.hbc`)는 바이트 단위로 검사해요.
 
 ## 확인하지 못한 부분
 
@@ -37,7 +39,9 @@
 
 ## 캡처 지점
 
-실행 전에 `TEST_MODE=1`로 API를 띄우고, 실행 ID를 `X-Retina-Run` 헤더에 넣어 `POST /__test/reset`을 호출해요. 그러면 그 실행의 데이터만 기준값으로 돌아가요.
+실행 전에 `TEST_MODE=1`로 API를 띄우고, 실행 ID를 `X-Retina-Run` 헤더에 넣어 `POST /__test/reset`을 호출해요. 그러면 그 실행의 데이터만 기준값으로 돌아가요. 실행이 끝나면 같은 헤더로 `POST /__test/runs/end`를 호출해 자리를 돌려줘요.
+
+API는 실행별 저장소를 최대 50개 두고, 30분 안에 쓴 실행은 절대 지우지 않아요. 자리가 모두 사용 중이면 새 실행 ID만 `503 { "error": "run_capacity_exceeded" }`로 거절해요. 기존 실행을 초기화하지는 않아요.
 
 1. 첫 Profile 화면: `retina-example://profile?run=<id>`로 연 뒤 `retina-ready-profile`을 기다려요.
 2. 검증 오류가 난 Edit 화면: `retina-example://edit`에서 이름을 비우거나 이메일을 잘못 넣고 `save-button`을 눌러요.

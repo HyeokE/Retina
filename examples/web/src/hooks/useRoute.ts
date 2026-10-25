@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import { pushAppPath, replaceAppPath } from '../infrastructure/retina-run.ts'
 
 export type Route = 'profile' | 'edit'
 
 // Path-based entry: "/" opens Profile, "/edit" opens Edit profile.
 // Vite dev and preview servers fall back to index.html for unknown paths.
+// History writes go through push/replaceAppPath so a test build keeps its
+// ?retinaRun=<id> across navigation and reloads.
 const ROUTE_PATHS: Readonly<Record<Route, string>> = { profile: '/', edit: '/edit' }
 
 function routeFromPath(pathname: string): Route | undefined {
@@ -21,7 +24,7 @@ export function useRoute(): { route: Route; navigate: (to: Route) => void } {
   useEffect(() => {
     // Unknown paths land on Profile; keep the address bar honest about it.
     if (routeFromPath(window.location.pathname) === undefined) {
-      window.history.replaceState(null, '', ROUTE_PATHS.profile)
+      replaceAppPath(ROUTE_PATHS.profile)
     }
     const onPopState = () => setRoute(currentRoute())
     window.addEventListener('popstate', onPopState)
@@ -29,7 +32,7 @@ export function useRoute(): { route: Route; navigate: (to: Route) => void } {
   }, [])
 
   const navigate = useCallback((to: Route) => {
-    window.history.pushState(null, '', ROUTE_PATHS[to])
+    pushAppPath(ROUTE_PATHS[to])
     setRoute(to)
   }, [])
 

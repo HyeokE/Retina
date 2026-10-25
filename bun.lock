@@ -40,6 +40,14 @@
         "typescript": "~6.0.3",
       },
     },
+    "examples/scripts": {
+      "name": "retina-example-scripts",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@types/node": "^22.18.0",
+        "typescript": "^7.0.2",
+      },
+    },
     "examples/shared": {
       "name": "retina-example-shared",
       "version": "0.0.0",
@@ -929,6 +937,8 @@
     "retina-example-api": ["retina-example-api@workspace:examples/api"],
 
     "retina-example-expo": ["retina-example-expo@workspace:examples/expo"],
+
+    "retina-example-scripts": ["retina-example-scripts@workspace:examples/scripts"],
 
     "retina-example-shared": ["retina-example-shared@workspace:examples/shared"],
 

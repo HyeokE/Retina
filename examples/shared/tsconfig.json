@@ -8,5 +8,5 @@
     "lib": ["ES2023", "DOM"],
     "types": []
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

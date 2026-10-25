@@ -13,7 +13,8 @@ export interface ProfileClient {
 export interface ProfileClientOptions {
   /**
    * Returns the current Retina run id, if any. It is read on every request
-   * because a run id is injected at runtime, not at build time.
+   * because a run id is injected at runtime, not at build time. If it throws,
+   * the request is not sent and the error propagates (fail closed).
    */
   readonly runId?: () => string | undefined;
 }

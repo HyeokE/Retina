@@ -5,4 +5,13 @@ export type { Profile, ProfileField, ProfileFieldErrors, ProfileValidationResult
 export { SEED_PROFILE, PROFILE_LIMITS, validateProfile, hasFieldErrors } from './profile.ts';
 export type { ProfileClient, ProfileClientOptions, UpdateProfileResult } from './profile-client.ts';
 export { createProfileClient, ProfileApiError } from './profile-client.ts';
-export { RETINA_RUN_HEADER, RETINA_RUN_ID_PATTERN, isValidRetinaRunId } from './retina-run.ts';
+export type { RetinaRunState } from './retina-run.ts';
+export {
+  RETINA_RUN_HEADER,
+  RETINA_RUN_ID_PATTERN,
+  NO_RETINA_RUN,
+  RetinaRunBlockedError,
+  applyRetinaRunParam,
+  isValidRetinaRunId,
+  retinaRunIdOrThrow,
+} from './retina-run.ts';
