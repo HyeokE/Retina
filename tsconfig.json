@@ -5,7 +5,11 @@
     // so relative imports keep their .ts extension and only erasable syntax is
     // allowed (same settings as the examples).
     "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true
+    "erasableSyntaxOnly": true,
+    // Workspace imports of `retina` resolve to its TypeScript sources through
+    // the `retina-source` export condition, so typechecking never needs a
+    // built `dist`. The published package.json has no such condition.
+    "customConditions": ["retina-source"]
   },
   "include": ["packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "vitest.config.ts"]
 }

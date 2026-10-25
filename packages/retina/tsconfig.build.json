@@ -1,0 +1,16 @@
+{
+  // Publishable build: ESM JavaScript and declarations in dist/. Node does not
+  // strip types inside node_modules, so consumers get JS; relative `.ts`
+  // imports are rewritten to `.js` on emit.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src/**/*.ts"]
+}
