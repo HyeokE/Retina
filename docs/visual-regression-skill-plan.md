@@ -269,13 +269,13 @@ docs/
 
 | 워크스페이스 | 내용 |
 | --- | --- |
-| `retina-example-shared` | 검증 규칙·메시지·API 클라이언트 |
-| `retina-example-api` | node:http와 메모리 저장소. `GET/PUT /profile`, `TEST_MODE=1`일 때만 `/__test/health`·`/__test/reset`. 기본 `127.0.0.1:4010` |
+| `retina-example-shared` | 검증 규칙·메시지·API 클라이언트, React hook(`retina-example-shared/react`, 클라이언트 주입) |
+| `retina-example-api` | node:http와 메모리 저장소. `GET/PUT /profile`, `TEST_MODE=1`일 때만 `/__test/health`·`/__test/reset`과 `X-Retina-Run` 헤더별 저장소(최대 50개, LRU). 기본 `127.0.0.1:4010` |
 | `retina-example-web` | Vite 8.3.5 + React 19.3.0. 경로 `/`·`/edit`, 주요 요소에 `data-testid`, 데이터 로딩 뒤 `data-retina-ready="profile\|edit"`, `<meta name="retina-build-id">`(`VITE_BUILD_ID`, 기본 "dev"), `VITE_API_BASE_URL` |
 | `retina-example-expo` | Expo SDK 58, RN 0.88.0. `testID`, 1×1 투명 `retina-ready-<screen>`·`retina-build-id` 표식, scheme `retina-example`, `EXPO_PUBLIC_API_BASE_URL`(기본값은 iOS 127.0.0.1, Android 10.0.2.2) |
 
 - 확인한 것: `bun install --frozen-lockfile` 변경 없음, `bun run typecheck`(패키지 + 예제 4개) 통과, API 스모크(GET seed, 잘못된 PUT은 400과 `fieldErrors`, 올바른 PUT은 값 trim, `POST /__test/reset`으로 seed 복귀) 통과, `bun run example:build`(web vite build, `expo export` ios·android) 통과, 남는 리스너 없음. 루트 script는 `typecheck`(= `typecheck:packages` + `typecheck:examples`), `example:api`, `example:api:test`, `example:web`, `example:expo`, `example:build`예요. **Retina 실행은 아직 한 번도 하지 않았어요.**
-- 미검증·후속(단계 B 작업에 배정): (a) 1×1 투명 표식이 XCUITest·UiAutomator2에 보이는지(G-B4·G-B5). (b) Android release 빌드는 mock API로의 평문 HTTP를 막아요(debug는 가능, G-B10). (c) 예제는 ready·build-id 표식을 test mode와 상관없이 항상 렌더링해서 7장 "production 제외" 규칙을 아직 보여 주지 못해요. 표식을 test mode 플래그 뒤로 옮기는 것이 후속 작업이고, 규칙을 지켰다고 주장하지 않아요(G-B3·G-C6). (d) 웹 정적 호스트에는 `/edit`용 SPA fallback이 필요해요(G-B3).
+- 미검증·후속(단계 B 작업에 배정): (a) 1×1 투명 표식이 XCUITest·UiAutomator2에 보이는지(G-B4·G-B5). (b) Android release 빌드는 mock API로의 평문 HTTP를 막아요(debug는 가능, G-B10). (c) ready·build-id·run id 표식은 `VITE_RETINA_TEST_MODE`·`EXPO_PUBLIC_RETINA_TEST_MODE`가 켜졌을 때만 번들에 들어가요. `bun run example:check:prod`가 production 산출물에서 표식 문자열 0건을, `example:check:test`가 테스트 빌드에서 표식 존재를 확인했어요. 실행 ID는 빌드가 아니라 실행 시점에 넘겨요(웹 `?retinaRun=`, 앱 딥링크 `?run=`). 웹의 실행 ID 전달은 브라우저에서 아직 돌려 보지 않았어요. (d) 웹 정적 호스트에는 `/edit`용 SPA fallback이 필요해요(G-B3).
 
 ### 6.5 도구와 실행 환경 (사용자 결정, 2026-10-25)
 
