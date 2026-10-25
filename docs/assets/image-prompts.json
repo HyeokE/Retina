@@ -1,0 +1,14 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "Retina README brand concept assets; not product screenshots",
+  "assets": [
+    {
+      "path": "retina-hero.png",
+      "prompt": "Use case: ads-marketing. Create a polished editorial brand banner for the GitHub README of Retina, an open source agent skill being designed for visual validation of web and React Native mobile apps. Wide landscape 3:1 composition, professional restrained software-tool branding. Main visual: a precise optical lens / retina-inspired concentric aperture connects a small desktop UI frame and a mobile screen frame, revealing subtly highlighted comparison differences in the screen geometry. Elegant flat geometric illustration with a little dimensional depth and spacious clean background, crisp typography, excellent readability at README width. Exact prominent text: \"Retina\". Small secondary exact text: \"Visual validation for web and mobile\". Use a restrained dark ink and warm white scheme with a single bright blue signal accent. Show deliberate alignment guides and two small highlighted regions, not a busy dashboard. No fabricated charts, test results, badges, screenshots, green success metrics, human eyes, photoreal eyes, code blocks, watermarks, or extra text. Keep important content comfortably within frame. High quality brand concept artwork, not a screenshot of existing software."
+    },
+    {
+      "path": "retina-symbol.png",
+      "prompt": "Use case: logo-brand. Create a standalone square Retina brand symbol for a developer tool that validates web and mobile UI visually. A beautifully balanced geometric optical aperture or concentric focus mark, with one precise offset segment suggesting detection of a visual difference. Clean minimal bold silhouette readable at 32px, crisp almost vector-like raster finish, dark ink on warm white background with a single small bright blue accent. Centered, generous whitespace, flat design, no gradients, no mockup, no human eye, no letters, no text, no watermark. A coherent, original professional software project identity."
+    }
+  ]
+}

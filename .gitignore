@@ -1,0 +1,5 @@
+# Local agent state
+.omc/
+
+# macOS metadata
+.DS_Store
