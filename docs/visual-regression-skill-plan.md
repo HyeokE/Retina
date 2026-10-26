@@ -1,12 +1,19 @@
 # Retina: 개발 중 시각적 검증·프로젝트 유효성 검증 계획
 
-작성일: 2026-10-25 · 상태: 비관적 가정으로 재작성한 설계안에 사용자 결정(2026-10-25)을 반영 · 구현·CI 실행 전
+작성일: 2026-10-25 · 상태: 사용자 결정과 실행 계약을 반영한 설계안 · 예제 검증 완료, 코어 구현·CI 실행 경로 검증 중
 
 Retina는 **① 개발 중 시각적 검증**과 **② 개발된 프로젝트의 유효성 검증**을 제공하는 **범용 패키지**예요. 어떤 도메인·프로젝트에서도 쓸 수 있어야 하고, 특정 회사의 코드에 묶지 않아요. 대상은 **URL로 접근하는 웹 앱 + React Native / Expo 앱(bare RN 포함)**, 실행기는 **Vitest**예요. **로컬뿐 아니라 사람의 조작 없이 CI에서도 실행되는 것**이 초기 완료 조건이에요. ①의 핵심은 **Figma 프레임과 구현을 비교하는 디자인 비교**예요(13장).
 
-현재 저장소에는 소개·계획 문서와 Bun 워크스페이스 골격(패키지 3개, 소스는 비어 있음)이 있어요. 실행 로직·시나리오·CI 설정은 없어요. 문서의 도구 구성, 명령·인터페이스 이름, Figma API 사용법과 수치는 구현 제안이며 검증된 성능이 아니에요. 지금까지 실제로 실행한 것은 두 가지예요. 하나는 Aside 재확인(5장)이에요. 다른 하나는 저장소 골격 점검이에요. `bun install`로 40개 패키지를 설치해 `bun.lock`을 만들었고, `bun run typecheck`는 TypeScript 7.0.2로 종료 코드 0이었고, `bun run test`는 테스트가 아직 없어 `--passWithNoTests`로 통과했어요. Node가 adapter-web에서 retina로 가는 워크스페이스 링크를 해석하는 것도 확인했어요. 예제 4개는 `bun run typecheck`와 `bun run example:build`가 통과했고 API 스모크 테스트도 통과했어요(6.4). Retina 실행은 아직 한 번도 하지 않았어요. `--passWithNoTests`는 실제 테스트가 생기면 제거해요. 테스트 0개를 비정상으로 보는 규칙(9장)과 충돌하기 때문이에요. SkinSeoulFront 조사(14장)는 읽기 전용 조사예요. **CI 실행 후 적합성 판정과 근거를 정적 HTML로 제공하는 것**도 필수 결과물이에요.
+현재 저장소에는 패키지 3개와 도메인 중립 예제, runner 확인용 workflow가 있어요. `655288c` 기준으로 예제 테스트 44개와 타입 검사가 통과했고, 테스트가 없어도 성공시키던 `--passWithNoTests`는 제거했어요. 웹·Expo production 산출물의 테스트 표식 제외도 확인했어요(6.4). `7f4fd84`·`5bb4054`에는 runner 확인용 workflow가 추가됐어요. 코어 G-B1은 `a954a13`에 커밋됐어요. 이 문서에서는 소스 추가와 종료 코드 계약만 확인했으며, 코어 시험 결과나 CLI·CI 연결의 완료 근거로 삼지 않아요. **Retina를 통해 웹·앱을 실행하고 CI 판정까지 연결한 증거는 아직 없어요.** 예제 테스트와 runner 점검을 제품 실행 검증과 구분해요.
+
+도구 구성, 명령·인터페이스 이름과 수치는 구현 제안이며 검증된 성능이 아니에요. **CI 실행 후 적합성 판정과 근거를 정적 HTML로 제공하는 것**은 필수 결과물이에요. SkinSeoulFront 조사(14장)는 읽기 전용 조사예요.
 
 문서는 세 부분이에요. **제1부(1~13장)**는 범용 Retina의 계약이고, 특정 프로젝트의 이름·경로·환경 변수·URL·계정이 나오지 않아요. **제2부(14~19장)**는 첫 파일럿 SkinSeoulFront가 그 계약을 어떻게 채우는지 보여 주는 한 가지 예시예요. **제3부(20~23장)**는 단계 계획, 수용 실험, 결정 사항이에요.
+
+이 계획서는 제품 범위와 결정의 기준 문서예요. 구현 세부사항은 아래 두 문서로 연결해요. README는 처음 보는 사용자를 위한 제품 소개로 유지해요.
+
+- [실행·판정·증거 계약](implementation-contracts.md): 실행 목록, provider 순서, 상태·종료 코드, CI 집계, 승인·디자인 비교 조건을 정리해요.
+- [구현 단계와 수용 기준](implementation-roadmap.md): 선행조건, 변경 경로, 산출물, 수용 실험과 중단 조건을 정리해요.
 
 ## 확정된 결정 (사용자, 2026-10-25)
 
@@ -192,7 +199,7 @@ OS별 testID 노출, 요소 경계와 이미지 픽셀 좌표 변환, safe area,
 
 | 확장 지점 | 프로젝트가 구현하는 일 | Retina 기본 제공(제안) | 예시 |
 | --- | --- | --- | --- |
-| 인증·세션 `AuthProvider` | 테스트 사용자 상태로 만들기 | `cookieAuth`, `storageStateAuth`, `runtimeTokenAuth`(앱: 테스트 모드에서 실행 시점에 단명 토큰 주입), `preAuthenticatedBuild`(자격 증명이 빌드에 들어가서 마지막 수단, 4장) | 웹: API 로그인 응답의 쿠키 주입. 앱: launch argument·테스트 딥링크·mock 서버 인증으로 토큰 주입 |
+| 인증·세션 `AuthProvider` | 테스트 사용자 상태로 만들기 | `cookieAuth`, `storageStateAuth`, `runtimeTokenAuth`(앱: 테스트 모드에서 실행 시점에 단명 토큰 주입) | 웹: API 로그인 응답의 쿠키 주입. 앱: launch argument·테스트 딥링크·mock 서버 인증으로 토큰 주입 |
 | fixture `FixtureHooks` | `setup`, `snapshot`, `restore` | 훅 호출 순서·잔존 상태 복구 규칙·오류 처리 | 테스트 계정의 데이터를 정해진 상태로 reset |
 | 데이터 주입 `DataProvider` | 화면이 쓰는 데이터를 fixture로 제공 | `routeInterceptor`(웹 `page.route`), `mockServer`(로컬 mock HTTP 서버), `backendSeedHook`(테스트 backend 시딩 훅) | 라우트 → fixture JSON, 테스트 계정 시딩 |
 | 실행 환경 고정 `EnvOverrides` | 시계·날짜·로캘·타임존·통화·숫자 형식·feature flag·세션을 테스트 모드에서 덮어쓰기 | 값 선언과 적용 확인 | 고정 날짜, 고정 로캘, flag 전부 off |
@@ -229,7 +236,7 @@ export default defineConfig({
 })
 ```
 
-### 6.4 저장소 구성 (골격만 있고 구현은 아직)
+### 6.4 저장소 구성과 구현 현황
 
 ```text
 packages/
@@ -256,7 +263,7 @@ packages/
 skills/retina/references/  # SKILL.md + 모드별 참조(dev-visual·Figma, project-validation, configuration, baseline policy)
 actions/                   # composite GitHub Actions(에뮬레이터·시뮬레이터 준비, retina 실행, 리포트 업로드 등)
 .github/workflows/         # 소비 저장소가 호출하는 reusable workflow(workflow_call)
-examples/shared/  examples/api/  examples/web/  examples/expo/   # 파일럿과 무관한 도메인 중립 예제(범용 경로 증명용, 20장). 현황은 아래
+examples/shared/  examples/api/  examples/web/  examples/expo/  examples/scripts/   # 파일럿과 무관한 도메인 중립 예제(범용 경로 증명용, 20장). 현황은 아래
 docs/
 ```
 
@@ -270,16 +277,17 @@ docs/
 | 워크스페이스 | 내용 |
 | --- | --- |
 | `retina-example-shared` | 검증 규칙·메시지·API 클라이언트, React hook(`retina-example-shared/react`, 클라이언트 주입) |
-| `retina-example-api` | node:http와 메모리 저장소. `GET/PUT /profile`, `TEST_MODE=1`일 때만 `/__test/health`·`/__test/reset`과 `X-Retina-Run` 헤더별 저장소(최대 50개, LRU). 기본 `127.0.0.1:4010` |
+| `retina-example-api` | node:http와 메모리 저장소. `GET/PUT /profile`, `TEST_MODE=1`일 때만 `/__test/health`·`/__test/reset`·`POST /__test/runs/end`와 `X-Retina-Run` 헤더별 저장소(최대 50개, 비활성 30분 뒤 정리, 모두 사용 중이면 503). 기본 `127.0.0.1:4010` |
 | `retina-example-web` | Vite 8.3.5 + React 19.3.0. 경로 `/`·`/edit`, 주요 요소에 `data-testid`, 데이터 로딩 뒤 `data-retina-ready="profile\|edit"`, `<meta name="retina-build-id">`(`VITE_BUILD_ID`, 기본 "dev"), `VITE_API_BASE_URL` |
+| `retina-example-scripts` | production/test 빌드의 표식 검사와 검사 스크립트 테스트 |
 | `retina-example-expo` | Expo SDK 58, RN 0.88.0. `testID`, 1×1 투명 `retina-ready-<screen>`·`retina-build-id` 표식, scheme `retina-example`, `EXPO_PUBLIC_API_BASE_URL`(기본값은 iOS 127.0.0.1, Android 10.0.2.2) |
 
 - 확인한 것: `bun install --frozen-lockfile` 변경 없음, `bun run typecheck`(패키지 + 예제 4개) 통과, API 스모크(GET seed, 잘못된 PUT은 400과 `fieldErrors`, 올바른 PUT은 값 trim, `POST /__test/reset`으로 seed 복귀) 통과, `bun run example:build`(web vite build, `expo export` ios·android) 통과, 남는 리스너 없음. 루트 script는 `typecheck`(= `typecheck:packages` + `typecheck:examples`), `example:api`, `example:api:test`, `example:web`, `example:expo`, `example:build`예요. **Retina 실행은 아직 한 번도 하지 않았어요.**
-- 미검증·후속(단계 B 작업에 배정): (a) 1×1 투명 표식이 XCUITest·UiAutomator2에 보이는지(G-B4·G-B5). (b) Android release 빌드는 mock API로의 평문 HTTP를 막아요(debug는 가능, G-B10). (c) ready·build-id·run id 표식은 `VITE_RETINA_TEST_MODE`·`EXPO_PUBLIC_RETINA_TEST_MODE`가 켜졌을 때만 번들에 들어가요. `bun run example:check:prod`가 production 산출물에서 표식 문자열 0건을, `example:check:test`가 테스트 빌드에서 표식 존재를 확인했어요. 실행 ID는 빌드가 아니라 실행 시점에 넘겨요(웹 `?retinaRun=`, 앱 딥링크 `?run=`). 웹의 실행 ID 전달은 브라우저에서 아직 돌려 보지 않았어요. (d) 웹 정적 호스트에는 `/edit`용 SPA fallback이 필요해요(G-B3).
+- 미검증·후속(단계 B 작업에 배정): (a) 1×1 투명 표식이 XCUITest·UiAutomator2에 보이는지(G-B4·G-B5). (b) Android release 빌드는 mock API로의 평문 HTTP를 막아요(debug는 가능, G-B10). (c) ready·build-id·run id 표식은 `VITE_RETINA_TEST_MODE`·`EXPO_PUBLIC_RETINA_TEST_MODE`가 켜졌을 때만 번들에 들어가요. `bun run example:check:prod`가 production 산출물에서 표식 문자열 0건을, `example:check:test`가 테스트 빌드에서 표식 존재를 확인했어요. 실행 ID는 빌드가 아니라 실행 시점에 넘겨요(웹 `?retinaRun=`, 앱 딥링크 `?run=`). 실행 ID의 저장·재사용은 단위 테스트로 확인했고, 실제 브라우저·기기에서의 전달은 아직 확인하지 않았어요. (d) `/edit` SPA fallback은 예제 서버에 반영했어요. 실제 어댑터로 진입·재진입하는 검증은 G-B3에서 진행해요.
 
 ### 6.5 도구와 실행 환경 (사용자 결정, 2026-10-25)
 
-Retina 저장소의 루트 `package.json`과 `packages/retina/package.json`에 아래 내용이 이미 설정돼 있어요. 설치·타입 검사·테스트 실행(테스트 없음)은 확인했고(머리말), 게시용 빌드와 소비자 쪽 npm 설치는 확인하지 않았어요. 루트 `test` script의 `--passWithNoTests`는 실제 테스트가 생기면 제거해요.
+Retina 저장소의 루트 `package.json`과 `packages/retina/package.json`에 아래 내용이 이미 설정돼 있어요. 설치·타입 검사·예제 테스트 44개 통과는 확인했고(머리말), 게시용 빌드와 소비자 쪽 npm 설치는 확인하지 않았어요. 루트 `test` script의 `--passWithNoTests`는 `655288c`에서 제거했어요. Retina CLI의 테스트 0개 처리는 G-B6에서 별도로 확인해요.
 
 | 항목 | 결정 |
 | --- | --- |
@@ -496,7 +504,7 @@ CI는 baseline을 읽기 전용으로 사용해요. 기준이 없으면 candidat
 2. PR의 첫 run은 baseline이 없거나 달라서 `REVIEW_REQUIRED`로 끝나요. candidate 이미지와 `report.html`이 artifact로 남아요.
 3. 기준 환경 CI에서 `emit-baseline`으로 후보 baseline을 만들어요. 개발자는 `report.html`로 이미지를 검토하고 후보를 PR에 커밋해요. 봇이 baseline을 자동으로 커밋하지 않아요.
 4. PR이 보호 경로를 바꾸면 `retina finalize`가 CI 공급자 API로 **지정 검토자의 승인 여부를 확인**해요. 승인이 없으면 바뀐 baseline으로 비교한 결과도 `REVIEW_REQUIRED`로 남겨요.
-5. 승인은 승인한 커밋에 묶여요. 승인 뒤 이미지가 바뀌면 승인이 무효가 돼 다시 검토해요. 결과에는 승인자·커밋·이미지 해시를 연결해 기록해요.
+5. 보호 경로 변경이 없으면 기존 승인 기준을 사용해요. 변경이 있다면 승인은 후보 head SHA·baseline manifest 해시·정책 해시·필수 목록 해시에 묶어요. 승인 뒤 어느 하나라도 바뀌면 다시 검토해요. 승인된 후보 목록·정책·baseline은 새 run의 계획으로 고정하고, 검토자 자격과 집계 코드는 보호된 기준에서 가져와요. 승인 조회 실패는 미승인과 구분한 실행 오류예요. 상세 규칙은 [실행 계약 6장](implementation-contracts.md#6-기준-이미지와-승인-단위)을 따라요.
 6. 승인 후 **새 run**이 통과해야 gate를 통과해요. 기존 run을 성공으로 뒤집지 않아요.
 7. 승인 여부를 확인하는 연결이 아직 없으면 정책 변경은 `REVIEW_REQUIRED`로 남기고 PR 필수 gate 지원은 미완료로 표시해요.
 
@@ -530,11 +538,13 @@ Vitest 내장 상태와 Retina 상태를 혼동하지 않아요. 자동 단계�
 | 코드 | 의미 | CI 처리 |
 | --- | --- | --- |
 | `0` | 필수 결과가 모두 `PASS` | 성공 |
-| `1` | `FAIL` 존재 | 실패 |
+| `1` | 실행 오류 없이 `FAIL` 존재 | 실패 |
 | `2` | 실행 오류(설정 오류·기기 미부팅·테스트 0개·provider 오류) | 실패 |
-| `3` | `REVIEW_REQUIRED`·`INCONCLUSIVE`만 존재 | **성공 아님.** job은 실패로 끝나고, job summary에서 "검토 필요"로 구분해 보여 줘요 |
+| `3` | 실행 오류 없이 `REVIEW_REQUIRED`·`INCONCLUSIVE`가 남음 | **성공 아님.** job은 실패로 끝나고, job summary에서 "검토 필요"로 구분해 보여 줘요 |
 
-CI에서는 `0`만 성공이에요. `3`을 성공으로 바꾸는 설정은 두지 않아요. 결과 파일은 종료 전에 항상 쓰고, 집계 job은 종료 코드가 아니라 결과 파일을 읽어 판정해요.
+종료 코드 우선순위는 **실행 오류 `2` → 결함 `1` → 필수 미완료·검토 `3` → 통과 `0`**예요. 대표 상태의 `FAIL > INCONCLUSIVE > REVIEW_REQUIRED > PASS` 순서와 구분해요. 기능 실패와 provider 오류가 함께 있으면 대표 상태는 `FAIL`, 종료 코드는 `2`이며 두 원인을 모두 남겨요.
+
+CI에서는 `0`만 성공이에요. `3`을 성공으로 바꾸는 설정은 두지 않아요. 종료 전에 결과 저장을 시도하고, 저장 자체가 불가능하면 stderr·CI 상태에 오류를 남겨요. 집계 job은 고정한 실행 계획·job 상태·결과·증거를 함께 확인해요. 필수 job·검사·artifact가 없으면 성공하지 않아요. 선택 실행의 `0`도 전체 gate 통과는 아니에요. 세부 진리표와 집계 순서는 [실행 계약](implementation-contracts.md)에 있어요.
 
 어느 job의 종료 코드가 무엇을 gate하는지는 아래와 같아요.
 
@@ -721,7 +731,7 @@ API 밖의 입력도 디자인에 맞춰 고정해요. 시계·날짜(디자인�
 
 | 항목 | 규칙 |
 | --- | --- |
-| 촬영 폭 | 웹은 뷰포트를 프레임 폭(CSS px)으로 맞춰요. 네이티브는 기기가 폭을 정해서 방법이 달라요. iOS는 프레임 폭(pt)과 같은 pt 폭의 Simulator 모델을 골라요. Android는 `adb shell wm size`·`wm density`로 프레임의 dp 폭에 맞춰요(dp = px ÷ (density ÷ 160)). 고른 모델과 설정값은 `transforms`와 fingerprint에 기록해요. 폭을 맞출 수 없으면 `INCONCLUSIVE`로 두거나, 명시적 리샘플링으로 바꾸고 "낮은 신뢰"로 표시해요. 조용히 넘어가지 않아요 |
+| 촬영 폭 | 웹은 뷰포트를 프레임 폭(CSS px)으로 맞춰요. 네이티브는 기기가 폭을 정해서 방법이 달라요. iOS는 프레임 폭(pt)과 같은 pt 폭의 Simulator 모델을 골라요. Android는 `adb shell wm size`·`wm density`로 프레임의 dp 폭에 맞춰요(dp = px ÷ (density ÷ 160)). 고른 모델과 설정값은 `transforms`와 fingerprint에 기록해요. 폭을 맞출 수 없으면 `INCONCLUSIVE`로 두거나, 명시적 리샘플링으로 바꾸고 "낮은 신뢰"·`REVIEW_REQUIRED`로 표시해요. 자동 `PASS`는 금지해요 |
 | 플랫폼 UI 차이 | Android와 iOS는 내비게이션 바, 시스템 폰트, 기본 컨트롤이 달라요. 플랫폼별 프레임을 쓰고(13.2), 그래도 남는 차이는 13.4의 방식으로 사유와 면적을 공개하고 마스크해요 |
 | 스케일 | Figma 내보내기 `scale`을 촬영 DPR(기기 density)에 맞춰 요청해서 변환 없이 비교해요. Android는 density가 정수가 아닐 수 있어요. 맞출 수 없을 때만 명시적으로 리샘플링하고 기록해요 |
 | 비교 영역 | 프레임 영역만 잘라서 비교해요 |
@@ -759,11 +769,12 @@ API 밖의 입력도 디자인에 맞춰 고정해요. 시계·날짜(디자인�
 | 상황 | 디자인 검사 상태 |
 | --- | --- |
 | 임계값 미설정(기본) | `REVIEW_REQUIRED`. 일치율은 참고 정보이고 자동으로 `PASS`도 `FAIL`도 만들지 않아요 |
-| 프로젝트가 촬영 지점별 임계값을 설정했고 그 이하 | `REVIEW_REQUIRED` (`FAIL`이 아니에요) |
-| 프로젝트 임계값 충족 + 콘텐츠 일치 100% + 마스크 비율이 한도 이내 | 자동 판정은 `PASS`예요. 에이전트·사용자 검토는 선택이고 상태를 낮출 수만 있어요. 검토로 `PASS`를 올리지 않아요 |
+| 프로젝트가 촬영 지점별 임계값을 설정했고 일치율이 그보다 낮음 | `REVIEW_REQUIRED` (`FAIL`이 아니에요) |
+| 프로젝트 임계값 이상 + 콘텐츠 일치 100% + 마스크 비율이 한도 이내 + 비교 신뢰 조건 충족 | 자동 판정은 `PASS`예요. 에이전트·사용자 검토는 선택이고 상태를 낮출 수만 있어요. 검토로 `PASS`를 올리지 않아요 |
 | 명시한 레이아웃 규칙(구조 검사) 위반 | `FAIL` |
 | fixture 스키마 실패, Figma 가져오기 실패, 오래된 fixture | `INCONCLUSIVE` |
 | 콘텐츠 불일치 | `REVIEW_REQUIRED`(데이터 문제인지 결함인지 검토) |
+| 명시적 리샘플링 등으로 낮은 신뢰도 | 비교 가능하면 `REVIEW_REQUIRED`, 비교 불가이면 `INCONCLUSIVE`예요. 자동 `PASS`는 금지해요 |
 
 - AI는 낮은 일치율을 `PASS`로 바꾸지 않아요. 사용자 수락은 11장의 경로만 따라요(`mode: dev`, `gateEligible: false`).
 - **디자인 비교와 회귀 비교는 별개 검사**이고 결과도 따로예요(`design` 대 `regression`). Figma 링크가 있으면 ①은 디자인 비교가 기본이고, 회귀는 선택이에요. ②는 CI baseline이 1차 기준이에요.
@@ -1094,6 +1105,8 @@ fork PR처럼 secret이 없는 실행은 어떤 suite가 못 돌았는지 표시
 
 5일·10일이 지나면 자동으로 기간을 늘리는 대신 무엇이 안 됐는지와 다음 선택을 제시해요. 이 시간 내에 끝난다는 예측은 아니에요. iOS runner 확보나 테스트 backend 준비가 안 되면 외부 의존성을 별도 지연으로 기록해요.
 
+구현은 코어·설정·Node 소비 경로, 웹·CI·정적 HTML, 네이티브·Figma 통합의 세 묶음으로 진행해요. 네이티브 runner·mock 연결과 Figma 가져오기 실험은 첫 묶음부터 병행해요. 기존 G/P 번호를 유지한 작업 의존성·수용 실험·중단 기록은 [구현 단계와 수용 기준](implementation-roadmap.md)에 있어요.
+
 ### 20.1 범용 작업 (G)
 
 | ID | 단계 | 작업 | 산출물 | 확인 방법 |
@@ -1102,12 +1115,12 @@ fork PR처럼 secret이 없는 실행은 어떤 suite가 못 돌았는지 표시
 | G-A2 | A | runner 확인용 빈 workflow를 macOS·Linux에서 실행 | 도구·자원 로그 artifact | `uname -m`, `ls /dev/kvm`, `xcrun simctl list runtimes` 출력이 artifact에 있음 |
 | G-A3 | A | Vitest 3.2.x와 5에서 최소 예제 실행(`projects`, `task.meta`, worker 옵션) | 호환표 | 두 버전에서 `vitest run` 통과, 안 되는 옵션 기록 |
 | G-A4 | A | 이름·배포 경로·workflow 접근 방식 결정 | 23장 갱신 | 해당 행이 "확정" |
-| G-B1 | B | `packages/retina`의 `domain/verdict`·`domain/compare`: 결과 모델, 상태 병합, PNG 비교, 집계 | 코어 단위 테스트 | 상태 병합 순서(`FAIL` > `INCONCLUSIVE` > `REVIEW_REQUIRED` > `PASS`) 테스트 통과, 테스트 0개 입력은 종료 코드 `2` |
+| G-B1 | B | `packages/retina`의 `domain/verdict`·`domain/compare`: 결과 모델, 상태 병합, 원시 RGBA 비교, 집계(PNG 디코딩은 infrastructure) | 코어 단위 테스트 | 상태 병합 순서(`FAIL` > `INCONCLUSIVE` > `REVIEW_REQUIRED` > `PASS`) 테스트 통과, 테스트 0개 입력은 종료 코드 `2` |
 | G-B2 | B | provider 타입·기본 구현·`defineConfig`·`requiredEnv` 검사 | 타입과 로더 | 타입 검사 통과, provider 누락·환경 변수 누락 시 `INCONCLUSIVE`와 이름만 기록 |
-| G-B3 | B | `adapter-web`과 `examples/web` 촬영. 앱은 이미 있고, 남은 일은 표식을 test mode 플래그 뒤로 옮기기와 `/edit` SPA fallback이에요(6.4) | 웹 어댑터, 예제 변경 | 새 CI runner에서 3장 촬영, 같은 빌드 A/A 3회 비교가 일치, production 빌드에 표식 문자열 없음 |
+| G-B3 | B | `adapter-web`과 `examples/web` 촬영. 예제의 표식 게이트와 `/edit` SPA fallback은 반영했고, 실제 어댑터의 진입·재진입·촬영을 연결해요(6.4) | 웹 어댑터, 예제 변경 | 새 CI runner에서 3장 촬영, 같은 빌드 A/A 3회 비교가 일치, production 빌드에 표식 문자열 없음 |
 | G-B4 | B | `adapter-native` iOS: UDID 고정, 세션 잠금, 소유 프로세스 기록 | iOS 어댑터 | UDID 미지정 시 실행 거부, 종료 후 소유 프로세스 잔존 0개. 예제의 1×1 투명 표식이 XCUITest에 보이는지 기록 |
 | G-B5 | B | `adapter-native` Android와 메모리 가드(8.3) | Android 어댑터 | 임계값을 현재 여유 메모리보다 높게 설정하면 에뮬레이터를 띄우지 않고 `INCONCLUSIVE`(`adb devices` 변화 없음). 예제의 1×1 투명 표식이 UiAutomator2에 보이는지 기록 |
-| G-B6 | B | `retina run` 종료 코드 | CLI | 가짜 결과 4종으로 종료 코드 `0`·`1`·`2`·`3` 확인. 첫 실제 테스트가 들어올 때 루트 `test` script의 `--passWithNoTests`를 제거하고, 테스트 0개가 비정상 종료인지 확인 |
+| G-B6 | B | `retina run` 종료 코드 | CLI | 단위 결과 4종에 더해 실제 Vitest assertion 실패·timeout·테스트 0개를 CLI까지 연결해 종료 코드 `0`·`1`·`2`·`3`을 확인해요. 루트 `--passWithNoTests`는 이미 제거했어요 |
 | G-B7 | B | `retina-validate.yml`·`retina-dev.yml` v0과 composite action으로 `examples/web` 실행 | workflow | 캐시 없는 새 runner에서 `result.json` artifact 생성. dev job이 `3`으로 끝나도 validate job 결과와 필수 check에 영향이 없음 |
 | G-B8 | B | 소비 프로젝트 이름이 Retina 코드에 없는지 검사 | 금지어 검사 스크립트 | `packages/`·`actions/`·`.github/`·`skills/`에서 파일럿 관련 이름 검색 결과 0건 |
 | G-B9 | B | Figma 가져오기 smoke: images·nodes 엔드포인트, 파일 버전 조회, rate limit, 토큰 비노출 | smoke 기록 | 프레임 PNG와 노드 트리를 받고 버전이 `result.json`에 기록됨, 로그·artifact에서 토큰 문자열 검색 결과 0건 |
@@ -1119,7 +1132,7 @@ fork PR처럼 secret이 없는 실행은 어떤 suite가 못 돌았는지 표시
 | G-C3 | C | `report.html` 생성과 오프라인 확인 | 리포트 | 압축 해제 후 네트워크 없이 열려 판정·이미지 표시, JSON과 건수 일치 |
 | G-C4 | C | `retina review`·`finalize`와 `review.json` 검증 | CLI | 해시가 다른 `review.json`은 종료 코드 `2`로 거부 |
 | G-C5 | C | `retina finalize`의 baseline 승인 확인과 승인 경로 시험 | CODEOWNERS·시험 PR | 승인 전 `3`, 승인 후 새 run `0`, 승인 뒤 이미지 변경 시 다시 `3` |
-| G-C6 | C | **두 번째 예제 `examples/expo`**를 같은 generic path로 실행. 앱은 이미 있고, 남은 일은 generic 네이티브 경로로 실행하기와 표식의 test mode 게이트예요(6.4) | Retina로 실행한 결과 | 예제 추가 커밋이 `examples/`와 소비 측 설정만 바꿈. Retina 코드 수정이 필요하면 원인을 "범용 결함"과 "파일럿 특화 침투"로 기록 |
+| G-C6 | C | **두 번째 예제 `examples/expo`**를 같은 generic path로 실행. 예제의 표식 게이트는 반영했고, generic 네이티브 경로의 실행과 실제 AX 표식 노출을 확인해요(6.4) | Retina로 실행한 결과 | 예제 추가 커밋이 `examples/`와 소비 측 설정만 바꿈. Retina 코드 수정이 필요하면 원인을 "범용 결함"과 "파일럿 특화 침투"로 기록 |
 | G-C7 | C | 디자인 비교: Figma 가져오기·캐시(버전 key), 정렬(13.5), 일치율(13.6), 차이 목록, 대시보드(13.7), 판정(13.8) | `domain/compare`·`domain/design-data`·`infrastructure/figma`·`infrastructure/report`, 대시보드 | 예제에서 일치율·마스크 비율·`transforms`가 표시되고, 임계값이 없으면 `REVIEW_REQUIRED` |
 | G-C8 | C | 디자인 데이터 맞추기: 인벤토리, 매핑 초안·확인 파일, fixture 생성, 스키마 검증 훅, 데이터 provider(`page.route`·mock 서버), 콘텐츠 검사 | 디자인 fixture 흐름 | 예제에서 fixture 한 값을 틀리게 하면 콘텐츠 불일치가 픽셀 결과보다 먼저 나옴 |
 | G-C9 | C | 리포트 열기: `report.open` 설정, CI에서 끔 | CLI 옵션 | 로컬은 설정대로 열리고, CI 환경에서는 열리지 않음. 스킬 환경에서는 `aside "http://localhost:<port>/report.html"`이 실제로 열림 |
